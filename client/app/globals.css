@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+  --background: #060707;
+  --foreground: #ededed;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-ibm-plex-sans);
+  --font-mono: var(--font-ibm-plex-mono);
+
+  /* Custom Fonts Helper */
+  --font-IBMPlexBold: var(--font-ibm-plex-sans);
+  /* Mapping for the user's snippet */
+  --font-IBMPlexRegular: var(--font-ibm-plex-sans);
+  /* Mapping for the user's snippet */
+
+  /* Custom Colors */
+  --color-whatsapp-teal: #128C7E;
+  --color-whatsapp-green: #25D366;
+  --color-koala-dark: #060707;
+  --color-koala-accent: #02C173;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
