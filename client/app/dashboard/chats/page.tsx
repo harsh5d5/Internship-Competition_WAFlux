@@ -53,14 +53,14 @@ export default function ChatsPage() {
     const selectedChat = chats.find(c => c.id === selectedChatId);
 
     return (
-        <div className="flex h-[calc(100vh-6rem)] overflow-hidden rounded-[20px] bg-[#0b141a] border border-white/5 shadow-2xl">
+        <div className="flex h-[calc(100vh-6rem)] overflow-hidden rounded-[20px] bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 shadow-2xl transition-colors">
             {/* Left Sidebar: Chat List */}
-            <div className="w-1/3 border-r border-white/5 flex flex-col bg-[#111b21]">
+            <div className="w-1/3 border-r border-gray-200 dark:border-white/5 flex flex-col bg-gray-50 dark:bg-[#111b21] transition-colors">
                 {/* Header */}
-                <div className="h-16 flex items-center justify-between px-4 border-b border-white/5 bg-[#1f2c34]">
-                    <div className="font-bold text-white text-lg">Chats</div>
+                <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-white/5 bg-white dark:bg-[#1f2c34] transition-colors">
+                    <div className="font-bold text-gray-900 dark:text-white text-lg">Chats</div>
                     <div className="flex gap-2 text-gray-400">
-                        <MoreVertical className="w-5 h-5 cursor-pointer hover:text-white" />
+                        <MoreVertical className="w-5 h-5 cursor-pointer hover:text-black dark:hover:text-white transition-colors" />
                     </div>
                 </div>
 
@@ -73,7 +73,7 @@ export default function ChatsPage() {
                         <input
                             type="text"
                             placeholder="Search or start new chat"
-                            className="w-full bg-[#1f2c34] text-white text-sm rounded-lg pl-10 pr-4 py-2 border-none focus:ring-1 focus:ring-[#02C173] placeholder-gray-500"
+                            className="w-full bg-white dark:bg-[#1f2c34] text-gray-900 dark:text-white text-sm rounded-lg pl-10 pr-4 py-2 border border-gray-200 dark:border-none focus:ring-1 focus:ring-[#02C173] placeholder-gray-500 transition-colors"
                         />
                     </div>
                 </div>
@@ -84,11 +84,11 @@ export default function ChatsPage() {
                         <div
                             key={chat.id}
                             onClick={() => setSelectedChatId(chat.id)}
-                            className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-[#1f2c34] transition-colors border-b border-white/5 
-                 ${selectedChatId === chat.id ? 'bg-[#1f2c34]' : ''}`}
+                            className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#1f2c34] transition-colors border-b border-gray-200 dark:border-white/5 
+                 ${selectedChatId === chat.id ? 'bg-gray-100 dark:bg-[#1f2c34]' : ''}`}
                         >
                             <div className="relative">
-                                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center text-white font-medium">
+                                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-700 dark:text-white font-medium transition-colors">
                                     {chat.avatar}
                                 </div>
                                 {chat.online && (
@@ -97,10 +97,10 @@ export default function ChatsPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-baseline">
-                                    <h4 className="text-white font-medium truncate">{chat.name}</h4>
+                                    <h4 className="text-gray-900 dark:text-white font-medium truncate">{chat.name}</h4>
                                     <span className={`text-xs ${chat.unread > 0 ? 'text-[#02C173]' : 'text-gray-500'}`}>{chat.time}</span>
                                 </div>
-                                <p className="text-sm text-gray-400 truncate">{chat.lastMessage}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{chat.lastMessage}</p>
                             </div>
                             {chat.unread > 0 && (
                                 <div className="w-5 h-5 bg-[#02C173] rounded-full flex items-center justify-center text-xs text-black font-bold">
@@ -113,27 +113,27 @@ export default function ChatsPage() {
             </div>
 
             {/* Right Area: Chat Window */}
-            <div className="flex-1 flex flex-col bg-[#0b141a] relative">
+            <div className="flex-1 flex flex-col bg-[#e5ddd5] dark:bg-[#0b141a] relative transition-colors">
                 {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')]"></div>
+                <div className="absolute inset-0 opacity-[0.06] dark:opacity-[0.04] pointer-events-none bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')]"></div>
 
                 {selectedChat ? (
                     <>
                         {/* Header */}
-                        <div className="h-16 flex items-center justify-between px-6 border-b border-white/5 bg-[#1f2c34] z-10">
+                        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#1f2c34] z-10 transition-colors">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white text-sm">
+                                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-700 dark:text-white text-sm transition-colors">
                                     {selectedChat.avatar}
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-medium">{selectedChat.name}</h3>
-                                    <p className="text-xs text-gray-400">{selectedChat.online ? 'Online' : 'Last seen today at 10:30 AM'}</p>
+                                    <h3 className="text-gray-900 dark:text-white font-medium">{selectedChat.name}</h3>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{selectedChat.online ? 'Online' : 'Last seen today at 10:30 AM'}</p>
                                 </div>
                             </div>
                             <div className="flex gap-4 text-gray-400">
-                                <Video className="w-5 h-5 cursor-pointer hover:text-white" />
-                                <Phone className="w-5 h-5 cursor-pointer hover:text-white" />
-                                <MoreVertical className="w-5 h-5 cursor-pointer hover:text-white" />
+                                <Video className="w-5 h-5 cursor-pointer hover:text-black dark:hover:text-white transition-colors" />
+                                <Phone className="w-5 h-5 cursor-pointer hover:text-black dark:hover:text-white transition-colors" />
+                                <MoreVertical className="w-5 h-5 cursor-pointer hover:text-black dark:hover:text-white transition-colors" />
                             </div>
                         </div>
 
@@ -146,27 +146,27 @@ export default function ChatsPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div className={`max-w-[70%] rounded-lg px-4 py-2 text-sm shadow-md 
+                                    <div className={`max-w-[70%] rounded-lg px-4 py-2 text-sm shadow-sm 
                         ${msg.sender === 'me'
-                                            ? 'bg-[#005c4b] text-white rounded-tr-none'
-                                            : 'bg-[#1f2c34] text-white rounded-tl-none'}`}
+                                            ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-gray-900 dark:text-white rounded-tr-none'
+                                            : 'bg-white dark:bg-[#1f2c34] text-gray-900 dark:text-white rounded-tl-none'}`}
                                     >
                                         <p>{msg.text}</p>
-                                        <span className="text-[10px] text-white/50 block text-right mt-1">{msg.time}</span>
+                                        <span className="text-[10px] text-gray-500 dark:text-white/50 block text-right mt-1">{msg.time}</span>
                                     </div>
                                 </motion.div>
                             ))}
                         </div>
 
                         {/* Input */}
-                        <div className="p-4 bg-[#1f2c34] z-10 flex items-center gap-3">
-                            <Paperclip className="w-6 h-6 text-gray-400 cursor-pointer hover:text-white" />
+                        <div className="p-4 bg-gray-50 dark:bg-[#1f2c34] z-10 flex items-center gap-3 transition-colors">
+                            <Paperclip className="w-6 h-6 text-gray-400 cursor-pointer hover:text-black dark:hover:text-white transition-colors" />
                             <input
                                 type="text"
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
                                 placeholder="Type a message"
-                                className="flex-1 bg-[#2a3942] text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#02C173]"
+                                className="flex-1 bg-white dark:bg-[#2a3942] text-gray-900 dark:text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#02C173] border border-gray-200 dark:border-none transition-colors"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && inputText.trim()) {
                                         // Mock send functionality
@@ -177,10 +177,10 @@ export default function ChatsPage() {
                             />
                             {inputText.trim() ? (
                                 <div className="p-2 bg-[#02C173] rounded-full cursor-pointer hover:bg-[#02A060]">
-                                    <Send className="w-5 h-5 text-black" />
+                                    <Send className="w-5 h-5 text-white dark:text-black" />
                                 </div>
                             ) : (
-                                <Mic className="w-6 h-6 text-gray-400 cursor-pointer hover:text-white" />
+                                <Mic className="w-6 h-6 text-gray-400 cursor-pointer hover:text-black dark:hover:text-white transition-colors" />
                             )}
                         </div>
                     </>

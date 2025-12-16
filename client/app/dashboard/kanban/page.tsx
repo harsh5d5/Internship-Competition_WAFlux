@@ -26,33 +26,53 @@ export default function KanbanPage() {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Dummy Data for visualization
+    const DUMMY_LEADS: Lead[] = [
+        { id: "1", name: "Alice Johnson", company: "TechCorp", value: "$5,000", status: "new", last_contact: "2 days ago" },
+        { id: "2", name: "Bob Smith", company: "Designify", value: "$12,000", status: "interested", last_contact: "1 day ago" },
+        { id: "3", name: "Charlie Davis", company: "EduLearn", value: "$3,500", status: "negotiating", last_contact: "4 hours ago" },
+        { id: "4", name: "Diana Prince", company: "SecureIT", value: "$8,000", status: "closed", last_contact: "1 week ago" },
+        { id: "5", name: "Ethan Hunt", company: "Mission Inc", value: "$20,000", status: "new", last_contact: "Just now" },
+        { id: "6", name: "Fiona Gallagher", company: "Beverage Co", value: "$1,200", status: "interested", last_contact: "3 days ago" },
+        { id: "7", name: "George Martin", company: "BookWrks", value: "$15,000", status: "negotiating", last_contact: "5 hours ago" },
+    ];
+
     // Fetch logic
     useEffect(() => {
-        fetch("http://localhost:8000/api/leads")
-            .then((res) => res.json())
+        const token = localStorage.getItem("access_token");
+        fetch("http://localhost:8000/api/leads", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
+            .then((res) => {
+                if (res.status === 401) {
+                    // Optional: redirect or handle auth error
+                    throw new Error("Unauthorized");
+                }
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
             .then((data) => {
-                setLeads(data);
+                if (Array.isArray(data) && data.length > 0) {
+                    setLeads(data);
+                } else {
+                    console.log("No leads found, using dummy data");
+                    setLeads(DUMMY_LEADS);
+                }
                 setLoading(false);
             })
             .catch((err) => {
-                console.error("Failed to fetch leads:", err);
+                console.error("Failed to fetch leads, using dummy data:", err);
+                setLeads(DUMMY_LEADS);
                 setLoading(false);
             });
     }, []);
 
     // Filter leads by status
-    const getLeadsByStatus = (status: string) => leads.filter((l) => l.status === status);
+    const getLeadsByStatus = (status: string) => Array.isArray(leads) ? leads.filter((l) => l.status === status) : [];
 
-    // Handle Drag Move (Optimistic Update)
-    // Note: Framer Motion Reorder is list-based. For full Kanban D&D across columns, 
-    // standard HTML5 DnD or a library like dnd-kit is robust. 
-    // However, for a simple "Smart" visual, we'll build a custom simple interaction or just list rendering for now.
-    // Given constraints, I will build a visually stunning interactive board, 
-    // but focusing on the *Structure* first. 
-    // Implementing full cross-list drag-and-drop with pure Framer Motion can be complex without a lib.
-    // I will implement a "Click to Move" or just visual columns for this first pass to ensure stability,
-    // or use a simple HTML Drag & Drop API wrapper.
-
+    // Data Transfer Handler for Drop
     const handleDrop = (e: React.DragEvent, status: string) => {
         e.preventDefault();
         const leadId = e.dataTransfer.getData("leadId");
@@ -64,9 +84,13 @@ export default function KanbanPage() {
         );
 
         // Backend Update
+        const token = localStorage.getItem("access_token");
         fetch(`http://localhost:8000/api/leads/${leadId}/status`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
             body: JSON.stringify({ status }),
         }).catch((err) => console.error("Update failed", err));
     };
@@ -79,8 +103,8 @@ export default function KanbanPage() {
         <div className="h-[calc(100vh-6rem)] flex flex-col">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-white">Smart CRM Board</h1>
-                    <p className="text-sm text-gray-400">Drag and drop leads to move them through your pipeline.</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Smart CRM Board</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Drag and drop leads to move them through your pipeline.</p>
                 </div>
                 <button className="flex items-center gap-2 bg-[#02C173] hover:bg-[#02A060] text-black font-semibold px-4 py-2 rounded-lg transition-colors">
                     <Plus className="w-4 h-4" />
@@ -94,41 +118,41 @@ export default function KanbanPage() {
                     {columns.map((col) => (
                         <div
                             key={col.id}
-                            className="flex-1 flex flex-col bg-[#0b141a] border border-white/5 rounded-xl overflow-hidden min-w-[280px]"
+                            className="flex-1 flex flex-col bg-gray-50 dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 rounded-xl overflow-hidden min-w-[280px] transition-colors"
                             onDragOver={(e) => e.preventDefault()}
                             onDrop={(e) => handleDrop(e, col.id)}
                         >
                             {/* Column Header */}
-                            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-[#111b21]">
+                            <div className="p-4 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-white dark:bg-[#111b21] transition-colors">
                                 <div className="flex items-center gap-3">
                                     <div className={`w-3 h-3 rounded-full ${col.color}`} />
-                                    <h3 className="font-semibold text-white tracking-wide">{col.title}</h3>
-                                    <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">
+                                    <h3 className="font-semibold text-gray-900 dark:text-white tracking-wide">{col.title}</h3>
+                                    <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-200 dark:bg-white/5 px-2 py-0.5 rounded-full">
                                         {getLeadsByStatus(col.id).length}
                                     </span>
                                 </div>
-                                <MoreHorizontal className="w-5 h-5 text-gray-500 cursor-pointer hover:text-white" />
+                                <MoreHorizontal className="w-5 h-5 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-black dark:hover:text-white" />
                             </div>
 
                             {/* Drop Area */}
-                            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-[#0b141a]/50">
+                            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50/50 dark:bg-[#0b141a]/50">
                                 {getLeadsByStatus(col.id).map((lead) => (
                                     <motion.div
                                         key={lead.id}
                                         layoutId={lead.id}
                                         draggable
                                         onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent, lead.id)}
-                                        whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)" }}
-                                        className="p-4 bg-[#1f2c34] rounded-lg border border-white/5 cursor-grab active:cursor-grabbing hover:border-[#02C173]/50 transition-colors group relative"
+                                        whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                                        className="p-4 bg-white dark:bg-[#1f2c34] rounded-lg border border-gray-200 dark:border-white/5 cursor-grab active:cursor-grabbing hover:border-[#02C173]/50 transition-all group relative shadow-sm dark:shadow-none"
                                     >
                                         <div className="flex justify-between items-start mb-2">
                                             <span className="text-xs font-semibold text-[#02C173] bg-[#02C173]/10 px-2 py-0.5 rounded">
                                                 {lead.company}
                                             </span>
                                         </div>
-                                        <h4 className="text-white font-medium mb-1 group-hover:text-[#02C173] transition-colors">{lead.name}</h4>
+                                        <h4 className="text-gray-900 dark:text-white font-medium mb-1 group-hover:text-[#02C173] transition-colors">{lead.name}</h4>
 
-                                        <div className="mt-4 flex items-center justify-between text-xs text-gray-400">
+                                        <div className="mt-4 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                                             <div className="flex items-center gap-1">
                                                 <DollarSign className="w-3 h-3" />
                                                 <span>{lead.value}</span>
@@ -142,7 +166,7 @@ export default function KanbanPage() {
                                 ))}
 
                                 {getLeadsByStatus(col.id).length === 0 && (
-                                    <div className="h-24 border-2 border-dashed border-white/5 rounded-lg flex items-center justify-center text-white/10 text-sm">
+                                    <div className="h-24 border-2 border-dashed border-gray-200 dark:border-white/5 rounded-lg flex items-center justify-center text-gray-400 dark:text-white/10 text-sm italic">
                                         Drop here
                                     </div>
                                 )}

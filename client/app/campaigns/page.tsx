@@ -35,9 +35,22 @@ export default function CampaignsPage() {
 
     useEffect(() => {
         fetch("http://localhost:8000/api/campaigns")
-            .then(res => res.json())
-            .then(data => setCampaigns(data))
-            .catch(err => console.error("Failed to fetch campaigns", err));
+            .then(res => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setCampaigns(data);
+                } else {
+                    console.error("API did not return an array:", data);
+                    setCampaigns([]);
+                }
+            })
+            .catch(err => {
+                console.error("Failed to fetch campaigns", err);
+                setCampaigns([]);
+            });
     }, []);
 
     const handleCreate = async () => {
@@ -67,7 +80,7 @@ export default function CampaignsPage() {
         }
     };
     return (
-        <div className="min-h-screen bg-[#060707] p-8 md:p-12">
+        <div className="min-h-screen bg-white dark:bg-[#060707] p-8 md:p-12 transition-colors duration-300">
             <div className="max-w-7xl mx-auto space-y-8">
                 <Link href="/" className="inline-flex items-center text-gray-400 hover:text-white mb-4 transition-colors">
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
@@ -75,8 +88,8 @@ export default function CampaignsPage() {
 
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-white">Campaigns</h1>
-                        <p className="text-sm text-gray-400">Create, schedule, and track your WhatsApp broadcasts.</p>
+                        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Campaigns</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Create, schedule, and track your WhatsApp broadcasts.</p>
                     </div>
                     <button
                         onClick={() => setShowModal(true)}
@@ -89,40 +102,40 @@ export default function CampaignsPage() {
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-[#0b141a] border border-white/5 p-5 rounded-xl">
+                    <div className="bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 p-5 rounded-xl shadow-sm dark:shadow-none transition-colors">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><Send size={20} /></div>
-                            <h3 className="text-gray-400 text-sm font-medium">Total Sent</h3>
+                            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Sent</h3>
                         </div>
-                        <p className="text-2xl font-bold text-white">12,543</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">12,543</p>
                     </div>
-                    <div className="bg-[#0b141a] border border-white/5 p-5 rounded-xl">
+                    <div className="bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 p-5 rounded-xl shadow-sm dark:shadow-none transition-colors">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-[#02C173]/10 rounded-lg text-[#02C173]"><BarChart2 size={20} /></div>
-                            <h3 className="text-gray-400 text-sm font-medium">Avg Open Rate</h3>
+                            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Avg Open Rate</h3>
                         </div>
-                        <p className="text-2xl font-bold text-white">78.4%</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">78.4%</p>
                     </div>
-                    <div className="bg-[#0b141a] border border-white/5 p-5 rounded-xl">
+                    <div className="bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 p-5 rounded-xl shadow-sm dark:shadow-none transition-colors">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500"><Clock size={20} /></div>
-                            <h3 className="text-gray-400 text-sm font-medium">Scheduled</h3>
+                            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Scheduled</h3>
                         </div>
-                        <p className="text-2xl font-bold text-white">3</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">3</p>
                     </div>
                 </div>
 
                 {/* Campaigns List */}
-                <div className="bg-[#0b141a] border border-white/5 rounded-xl overflow-hidden">
-                    <div className="p-4 border-b border-white/5 flex items-center justify-between">
-                        <h3 className="font-semibold text-white">All Campaigns</h3>
-                        <button className="text-gray-400 hover:text-white flex items-center gap-1 text-sm">
+                <div className="bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 rounded-xl overflow-hidden shadow-sm dark:shadow-none transition-colors">
+                    <div className="p-4 border-b border-gray-200 dark:border-white/5 flex items-center justify-between">
+                        <h3 className="font-semibold text-gray-900 dark:text-white">All Campaigns</h3>
+                        <button className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white flex items-center gap-1 text-sm">
                             <Filter size={14} /> Filter
                         </button>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-[#111b21] text-gray-400 text-xs uppercase font-semibold">
+                            <thead className="bg-gray-50 dark:bg-[#111b21] text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold transition-colors">
                                 <tr>
                                     <th className="p-4">Name</th>
                                     <th className="p-4">Status</th>
@@ -133,25 +146,25 @@ export default function CampaignsPage() {
                                     <th className="p-4">Date</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5 text-sm">
+                            <tbody className="divide-y divide-gray-200 dark:divide-white/5 text-sm">
                                 {campaigns.map((camp) => (
                                     <motion.tr
                                         key={camp.id}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        whileHover={{ backgroundColor: "rgba(255,255,255,0.02)" }}
-                                        className="group cursor-pointer text-gray-300"
+                                        whileHover={{ backgroundColor: "rgba(100,100,100,0.05)" }}
+                                        className="group cursor-pointer text-gray-600 dark:text-gray-300"
                                     >
                                         <td className="p-4">
-                                            <p className="font-medium text-white group-hover:text-[#02C173] transition-colors">{camp.name}</p>
+                                            <p className="font-medium text-gray-900 dark:text-white group-hover:text-[#02C173] transition-colors">{camp.name}</p>
                                             <span className="text-xs text-gray-500">{camp.type}</span>
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium border
-                             ${camp.status === 'Completed' ? 'bg-[#02C173]/10 text-[#02C173] border-[#02C173]/20' :
-                                                    camp.status === 'Scheduled' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                                                        camp.status === 'Active' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
-                                                            'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                             ${camp.status === 'Completed' ? 'bg-[#02C173]/10 text-[#029a5b] dark:text-[#02C173] border-[#02C173]/20' :
+                                                    camp.status === 'Scheduled' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-500 border-blue-500/20' :
+                                                        camp.status === 'Active' ? 'bg-purple-500/10 text-purple-600 dark:text-purple-500 border-purple-500/20' :
+                                                            'bg-gray-500/10 text-gray-500 dark:text-gray-400 border-gray-500/20'
                                                 }`}>
                                                 {camp.status}
                                             </span>
@@ -168,7 +181,7 @@ export default function CampaignsPage() {
                                         <td className="p-4 text-center">
                                             {camp.replied > 0 ? ((camp.replied / camp.sent) * 100).toFixed(1) + '%' : '-'}
                                         </td>
-                                        <td className="p-4 text-gray-500">
+                                        <td className="p-4 text-gray-500 dark:text-gray-500">
                                             {camp.scheduled_date}
                                         </td>
                                     </motion.tr>
@@ -187,31 +200,31 @@ export default function CampaignsPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-[#0b141a] w-full max-w-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+                            className="bg-white dark:bg-[#0b141a] w-full max-w-2xl rounded-2xl border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden transition-colors"
                         >
-                            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#111b21]">
-                                <h2 className="text-xl font-bold text-white">Create New Campaign</h2>
-                                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white"><X size={24} /></button>
+                            <div className="p-6 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-[#111b21] transition-colors">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Campaign</h2>
+                                <button onClick={() => setShowModal(false)} className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"><X size={24} /></button>
                             </div>
 
                             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-400">Campaign Name</label>
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-400">Campaign Name</label>
                                         <input
                                             type="text"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            className="w-full bg-[#1f2c34] border border-white/10 rounded-lg p-3 text-white focus:border-[#02C173] outline-none transition-colors"
+                                            className="w-full bg-gray-50 dark:bg-[#1f2c34] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-[#02C173] outline-none transition-colors"
                                             placeholder="e.g. Summer Sale"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-400">Type</label>
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-400">Type</label>
                                         <select
                                             value={formData.type}
                                             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                            className="w-full bg-[#1f2c34] border border-white/10 rounded-lg p-3 text-white focus:border-[#02C173] outline-none"
+                                            className="w-full bg-gray-50 dark:bg-[#1f2c34] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-[#02C173] outline-none"
                                         >
                                             <option value="Marketing">Marketing</option>
                                             <option value="Update">Update</option>
@@ -221,21 +234,21 @@ export default function CampaignsPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-400">Schedule Date</label>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-400">Schedule Date</label>
                                     <input
                                         type="datetime-local"
                                         value={formData.scheduled_date}
                                         onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
-                                        className="w-full bg-[#1f2c34] border border-white/10 rounded-lg p-3 text-white focus:border-[#02C173] outline-none hover:[color-scheme:dark]"
+                                        className="w-full bg-gray-50 dark:bg-[#1f2c34] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-[#02C173] outline-none hover:[color-scheme:light] dark:hover:[color-scheme:dark]"
                                     />
                                 </div>
 
                                 {/* A/B Testing Toggle */}
-                                <div className="bg-[#1f2c34]/50 border border-white/5 rounded-xl p-4">
+                                <div className="bg-gray-50 dark:bg-[#1f2c34]/50 border border-gray-200 dark:border-white/5 rounded-xl p-4 transition-colors">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <h3 className="font-semibold text-white">A/B Testing</h3>
-                                            <p className="text-xs text-gray-400">Test two message variations to optimize performance.</p>
+                                            <h3 className="font-semibold text-gray-900 dark:text-white">A/B Testing</h3>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">Test two message variations to optimize performance.</p>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input
@@ -258,17 +271,17 @@ export default function CampaignsPage() {
                                                         value={formData.variant_a_body}
                                                         onChange={(e) => setFormData({ ...formData, variant_a_body: e.target.value })}
                                                         placeholder="Hello {{1}}, check out our sale..."
-                                                        className="w-full bg-[#0b141a] border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#02C173] outline-none resize-none"
+                                                        className="w-full bg-white dark:bg-[#0b141a] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-sm text-gray-900 dark:text-white focus:border-[#02C173] outline-none resize-none"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold text-blue-400">VARIANT B (Test)</label>
+                                                    <label className="text-xs font-bold text-blue-500 dark:text-blue-400">VARIANT B (Test)</label>
                                                     <textarea
                                                         rows={4}
                                                         value={formData.variant_b_body}
                                                         onChange={(e) => setFormData({ ...formData, variant_b_body: e.target.value })}
                                                         placeholder="Hi {{1}}, don't miss out..."
-                                                        className="w-full bg-[#0b141a] border border-white/10 rounded-lg p-3 text-sm text-white focus:border-blue-400 outline-none resize-none"
+                                                        className="w-full bg-white dark:bg-[#0b141a] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-sm text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 outline-none resize-none"
                                                     />
                                                 </div>
                                             </div>
@@ -283,27 +296,27 @@ export default function CampaignsPage() {
                                                     max="90"
                                                     value={formData.split_ratio}
                                                     onChange={(e) => setFormData({ ...formData, split_ratio: parseInt(e.target.value) })}
-                                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#02C173]"
+                                                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#02C173]"
                                                 />
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-400">Message Body</label>
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-400">Message Body</label>
                                             <textarea
                                                 rows={4}
                                                 value={formData.variant_a_body}
                                                 onChange={(e) => setFormData({ ...formData, variant_a_body: e.target.value })}
                                                 placeholder="Type your broadcast message here..."
-                                                className="w-full bg-[#0b141a] border border-white/10 rounded-lg p-3 text-white focus:border-[#02C173] outline-none"
+                                                className="w-full bg-gray-50 dark:bg-[#0b141a] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-[#02C173] outline-none"
                                             />
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="p-6 border-t border-white/10 flex justify-end gap-3 bg-[#111b21]">
-                                <button onClick={() => setShowModal(false)} className="px-5 py-2 text-gray-400 font-medium hover:text-white transition-colors">Cancel</button>
+                            <div className="p-6 border-t border-gray-200 dark:border-white/10 flex justify-end gap-3 bg-gray-50 dark:bg-[#111b21] transition-colors">
+                                <button onClick={() => setShowModal(false)} className="px-5 py-2 text-gray-600 dark:text-gray-400 font-medium hover:text-black dark:hover:text-white transition-colors">Cancel</button>
                                 <button onClick={handleCreate} className="px-6 py-2 bg-[#02C173] text-black font-bold rounded-lg hover:bg-[#02a965] shadow-lg shadow-[#02C173]/20 transition-all">
                                     {formData.is_ab_test ? 'Schedule A/B Test' : 'Schedule Campaign'}
                                 </button>

@@ -83,24 +83,24 @@ export default function AutomationPage() {
     };
 
     return (
-        <div className="h-screen bg-[#060707] flex flex-col">
+        <div className="h-screen bg-white dark:bg-[#060707] flex flex-col transition-colors">
             {/* Header */}
-            <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#111b21] z-10">
+            <div className="h-16 border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-6 bg-gray-50 dark:bg-[#111b21] z-10 transition-colors">
                 <div className="flex items-center gap-4">
-                    <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+                    <Link href="/" className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
                         <ArrowLeft size={20} />
                     </Link>
                     <div>
-                        <h1 className="text-lg font-bold text-white flex items-center gap-2">
+                        <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-[#02C173]"></span>
                             Welcome Flow
                         </h1>
-                        <p className="text-xs text-gray-500">Last edited just now</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-500">Last edited just now</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-white/5 rounded-lg border border-white/5 transition-colors">
+                    <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white bg-gray-200 dark:bg-white/5 rounded-lg border border-gray-300 dark:border-white/5 transition-colors">
                         <Save size={16} /> Save Draft
                     </button>
                     <button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-black bg-[#02C173] hover:bg-[#02a965] rounded-lg shadow-[0_0_15px_rgba(2,193,115,0.2)] transition-colors">
@@ -112,36 +112,36 @@ export default function AutomationPage() {
             {/* Main Editor Area */}
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar Toolbar */}
-                <div className="w-64 border-r border-white/10 bg-[#0b141a] p-4 space-y-4">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Components</h3>
+                <div className="w-64 border-r border-gray-200 dark:border-white/10 bg-white dark:bg-[#0b141a] p-4 space-y-4 transition-colors">
+                    <h3 className="text-xs font-bold text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-4">Components</h3>
 
                     <div
-                        className="p-3 bg-[#1f2c34] border border-white/5 rounded-lg cursor-grab hover:border-[#02C173]/50 transition-colors flex items-center gap-3 group"
+                        className="p-3 bg-gray-50 dark:bg-[#1f2c34] border border-gray-200 dark:border-white/5 rounded-lg cursor-grab hover:border-[#02C173]/50 transition-colors flex items-center gap-3 group"
                         onClick={() => addNode('Message')}
                     >
-                        <div className="p-2 bg-blue-500/20 text-blue-500 rounded-md"><MessageSquare size={16} /></div>
-                        <span className="text-sm font-medium text-gray-300 group-hover:text-white">Send Message</span>
+                        <div className="p-2 bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-500 rounded-md"><MessageSquare size={16} /></div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white">Send Message</span>
                     </div>
 
                     <div
-                        className="p-3 bg-[#1f2c34] border border-white/5 rounded-lg cursor-grab hover:border-[#02C173]/50 transition-colors flex items-center gap-3 group"
+                        className="p-3 bg-gray-50 dark:bg-[#1f2c34] border border-gray-200 dark:border-white/5 rounded-lg cursor-grab hover:border-[#02C173]/50 transition-colors flex items-center gap-3 group"
                         onClick={() => addNode('Delay')}
                     >
-                        <div className="p-2 bg-purple-500/20 text-purple-500 rounded-md"><Clock size={16} /></div>
-                        <span className="text-sm font-medium text-gray-300 group-hover:text-white">Time Delay</span>
+                        <div className="p-2 bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-500 rounded-md"><Clock size={16} /></div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white">Time Delay</span>
                     </div>
 
                     <div
-                        className="p-3 bg-[#1f2c34] border border-white/5 rounded-lg cursor-grab hover:border-[#02C173]/50 transition-colors flex items-center gap-3 group"
+                        className="p-3 bg-gray-50 dark:bg-[#1f2c34] border border-gray-200 dark:border-white/5 rounded-lg cursor-grab hover:border-[#02C173]/50 transition-colors flex items-center gap-3 group"
                         onClick={() => addNode('Media')}
                     >
-                        <div className="p-2 bg-orange-500/20 text-orange-500 rounded-md"><FileText size={16} /></div>
-                        <span className="text-sm font-medium text-gray-300 group-hover:text-white">Send Document</span>
+                        <div className="p-2 bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-500 rounded-md"><FileText size={16} /></div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white">Send Document</span>
                     </div>
                 </div>
 
                 {/* Canvas */}
-                <div className="flex-1 h-full bg-[#060707] relative">
+                <div className="flex-1 h-full bg-gray-100 dark:bg-[#060707] relative transition-colors">
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}

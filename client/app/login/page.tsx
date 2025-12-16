@@ -42,23 +42,60 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
-    // Check for existing session
-    if (typeof window !== "undefined") {
-        const cookies = document.cookie.split(';');
-        const authCookie = cookies.find(c => c.trim().startsWith('auth=true'));
-        if (authCookie) {
-            router.push('/dashboard');
-        }
-    }
+    const [name, setName] = useState("");
 
-    const handleLogin = () => {
+    // Remove old cookie logic (replaced by Token Check)
+    // useEffect(() => { ... }) 
+
+    const handleLogin = async () => {
         setError("");
-        if (email === "vickky@gmail.com" && password === "vickky123") {
-            // Set cookie for 1 day
-            document.cookie = "auth=true; path=/; max-age=86400";
+        try {
+            const formData = new FormData();
+            formData.append('username', email); // backend expects 'username' for OAuth2
+            formData.append('password', password);
+
+            const res = await fetch('http://localhost:8000/token', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.detail || 'Login failed');
+            }
+
+            const data = await res.json();
+            localStorage.setItem("access_token", data.access_token);
+            localStorage.setItem("token_type", data.token_type);
             router.push("/dashboard");
-        } else {
-            setError("Invalid email or password");
+        } catch (err: any) {
+            setError(err.message);
+        }
+    };
+
+    const handleSignup = async () => {
+        setError("");
+        try {
+            const res = await fetch('http://localhost:8000/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    full_name: name
+                }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.detail || 'Signup failed');
+            }
+
+            // After signup, switch to login or auto-login
+            alert("Account created! Please sign in.");
+            setIsLogin(true);
+        } catch (err: any) {
+            setError(err.message);
         }
     };
 
@@ -268,6 +305,8 @@ export default function LoginPage() {
                                 <input
                                     type="text"
                                     placeholder="Username"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
                                 />
                             </div>
@@ -277,6 +316,8 @@ export default function LoginPage() {
                                 <input
                                     type="email"
                                     placeholder="Email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
                                 />
                             </div>
@@ -286,12 +327,14 @@ export default function LoginPage() {
                                 <input
                                     type="password"
                                     placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
                                 />
                             </div>
 
                             <motion.button
-                                onClick={() => router.push('/dashboard')}
+                                onClick={handleSignup}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 className="w-full py-3 bg-[#02C173] hover:bg-[#029a5b] text-[#060707] font-bold rounded-lg shadow-[0_0_20px_rgba(2,193,115,0.3)] transition-all flex items-center justify-center gap-2"

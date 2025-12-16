@@ -39,8 +39,8 @@ const engagementData = [
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-[#1f2c34] border border-white/10 p-3 rounded-lg shadow-xl">
-                <p className="text-white text-sm font-semibold mb-1">{label}</p>
+            <div className="bg-white dark:bg-[#1f2c34] border border-gray-200 dark:border-white/10 p-3 rounded-lg shadow-xl">
+                <p className="text-gray-900 dark:text-white text-sm font-semibold mb-1">{label}</p>
                 <p className="text-[#02C173] text-xs">Sent: {payload[0].value}</p>
                 <p className="text-blue-400 text-xs">Replies: {payload[1].value}</p>
             </div>
@@ -68,7 +68,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-tight text-white">Dashboard</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Dashboard</h1>
                 <div className="flex gap-2">
                     <button className="rounded-md bg-[#02C173] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#02A060] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#02C173]">
                         New Campaign
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                         key={stat.name}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="overflow-hidden rounded-[20px] bg-[#0b141a] px-4 py-5 shadow border border-white/5 sm:p-6"
+                        className="overflow-hidden rounded-[20px] bg-white dark:bg-[#0b141a] px-4 py-5 shadow border border-gray-200 dark:border-white/5 sm:p-6 transition-colors"
                     >
                         <div className="flex items-center">
                             <div className="flex-shrink-0 rounded-md bg-[#02C173]/10 p-3">
@@ -91,9 +91,9 @@ export default function DashboardPage() {
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="truncate text-sm font-medium text-gray-400">{stat.name}</dt>
+                                    <dt className="truncate text-sm font-medium text-gray-500 dark:text-gray-400">{stat.name}</dt>
                                     <dd>
-                                        <div className="text-lg font-medium text-white">{stat.value}</div>
+                                        <div className="text-lg font-medium text-gray-900 dark:text-white">{stat.value}</div>
                                     </dd>
                                 </dl>
                             </div>
@@ -106,9 +106,9 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* 1. Live Activity Feed (Span 1) */}
-                <div className="overflow-hidden rounded-[24px] bg-[#0b141a] shadow border border-white/5 h-full">
+                <div className="overflow-hidden rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 h-full transition-colors">
                     <div className="p-6">
-                        <h3 className="text-base font-semibold leading-6 text-white mb-6">Live Activity Feed</h3>
+                        <h3 className="text-base font-semibold leading-6 text-gray-900 dark:text-white mb-6">Live Activity Feed</h3>
                         <div className="flow-root">
                             <ul role="list" className="-mb-8">
                                 {activity.map((event, eventIdx) => (
@@ -133,10 +133,10 @@ export default function DashboardPage() {
                                                     </span>
                                                 </div>
                                                 <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                                                    <div className="whitespace-nowrap text-sm text-gray-400">
-                                                        <span className="font-medium text-white">{event.user}</span> {event.type.replace('_', ' ')}
+                                                    <div className="whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                        <span className="font-medium text-gray-900 dark:text-white">{event.user}</span> {event.type.replace('_', ' ')}
                                                     </div>
-                                                    <div className="whitespace-nowrap text-right text-sm text-gray-500">
+                                                    <div className="whitespace-nowrap text-right text-sm text-gray-400 dark:text-gray-500">
                                                         <time>{event.time}</time>
                                                     </div>
                                                 </div>
@@ -153,10 +153,10 @@ export default function DashboardPage() {
                 <div className="lg:col-span-2 space-y-6">
 
                     {/* Top: Donut Chart Status */}
-                    <div className="rounded-[24px] bg-[#0b141a] shadow border border-white/5 p-6 flex flex-col sm:flex-row items-center justify-between">
+                    <div className="rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 p-6 flex flex-col sm:flex-row items-center justify-between transition-colors">
                         <div className="w-full sm:w-1/2">
-                            <h3 className="text-base font-semibold text-white mb-1">Message Status Breakdown</h3>
-                            <p className="text-sm text-gray-400 mb-6">Real-time delivery statistics.</p>
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Message Status Breakdown</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Real-time delivery statistics.</p>
 
                             {/* Legend */}
                             <div className="grid grid-cols-2 gap-4">
@@ -164,8 +164,8 @@ export default function DashboardPage() {
                                     <div key={item.name} className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
                                         <div className="flex flex-col">
-                                            <span className="text-xs text-gray-400">{item.name}</span>
-                                            <span className="text-sm font-bold text-white">{item.value}%</span>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400">{item.name}</span>
+                                            <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}%</span>
                                         </div>
                                     </div>
                                 ))}
@@ -196,8 +196,8 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Bottom: Area Chart Volume */}
-                    <div className="rounded-[24px] bg-[#0b141a] shadow border border-white/5 p-6">
-                        <h3 className="text-base font-semibold text-white mb-6">Activity Volume (7 Days)</h3>
+                    <div className="rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 p-6 transition-colors">
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-6">Activity Volume (7 Days)</h3>
                         <div className="h-[250px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={volumeData}>
@@ -223,9 +223,9 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Bottom 2: Audience Engagement Bar Chart */}
-                    <div className="rounded-[24px] bg-[#0b141a] shadow border border-white/5 p-6">
-                        <h3 className="text-base font-semibold text-white mb-1">Audience Engagement by Hour</h3>
-                        <p className="text-sm text-gray-400 mb-6">Best times to send broadcasts.</p>
+                    <div className="rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 p-6 transition-colors">
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Audience Engagement by Hour</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Best times to send broadcasts.</p>
                         <div className="h-[200px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={engagementData}>
