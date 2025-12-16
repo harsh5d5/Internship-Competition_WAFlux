@@ -25,6 +25,7 @@ const navItems = [
 export function Sidebar() {
     const pathname = usePathname();
     const [user, setUser] = useState<{ full_name: string; email: string } | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const token = localStorage.getItem("access_token");
@@ -36,6 +37,11 @@ export function Sidebar() {
             })
                 .then((res) => {
                     if (res.ok) return res.json();
+                    if (res.status === 401) {
+                        localStorage.removeItem("access_token");
+                        window.location.href = "/login";
+                        throw new Error("Session expired");
+                    }
                     throw new Error("Failed to fetch user");
                 })
                 .then((data) => {
@@ -43,7 +49,15 @@ export function Sidebar() {
                 })
                 .catch((err) => {
                     console.error("Error fetching user:", err);
+                    setUser(null);
+                })
+                .finally(() => {
+                    setLoading(false);
                 });
+        } else {
+            setLoading(false);
+            // Optional: Redirect to login if no token acts as a barrier
+            // window.location.href = "/login"; 
         }
     }, []);
 
@@ -51,7 +65,7 @@ export function Sidebar() {
     const getInitial = () => {
         if (user?.full_name) return user.full_name.charAt(0).toUpperCase();
         if (user?.email) return user.email.charAt(0).toUpperCase();
-        return "?";
+        return "U";
     };
 
     return (
@@ -107,7 +121,17 @@ export function Sidebar() {
                 </div>
 
                 {/* User Profile Snippet */}
-                {user ? (
+                {loading ? (
+                    // Loading State
+                    <div className="mb-4 flex items-center gap-3 rounded-xl bg-black/5 dark:bg-white/5 p-3 animate-pulse">
+                        <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-700" />
+                        <div className="flex-1 space-y-2">
+                            <div className="h-3 w-20 rounded bg-gray-300 dark:bg-gray-700" />
+                            <div className="h-2 w-24 rounded bg-gray-300 dark:bg-gray-700" />
+                        </div>
+                    </div>
+                ) : user ? (
+                    // Loaded State
                     <div className="mb-4 flex items-center gap-3 rounded-xl bg-black/5 dark:bg-white/5 p-3 transition-colors">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#02C173] to-[#128C7E] font-bold text-white shadow-lg">
                             {getInitial()}
@@ -122,11 +146,21 @@ export function Sidebar() {
                         </div>
                     </div>
                 ) : (
-                    <div className="mb-4 flex items-center gap-3 rounded-xl bg-black/5 dark:bg-white/5 p-3 animate-pulse">
-                        <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-700" />
-                        <div className="flex-1 space-y-2">
-                            <div className="h-3 w-20 rounded bg-gray-300 dark:bg-gray-700" />
-                            <div className="h-2 w-24 rounded bg-gray-300 dark:bg-gray-700" />
+                    // Error/Fallback State
+                    <div className="mb-4 flex items-center gap-3 rounded-xl bg-yellow-50 dark:bg-yellow-900/10 p-3 border border-yellow-100 dark:border-yellow-900/20">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 font-bold">
+                            !
+                        </div>
+                        <div className="overflow-hidden">
+                            <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                                Session Locked
+                            </p>
+                            <button
+                                onClick={() => window.location.href = "/login"}
+                                className="text-xs text-yellow-600 hover:underline font-medium"
+                            >
+                                Sig-in again &rarr;
+                            </button>
                         </div>
                     </div>
                 )}

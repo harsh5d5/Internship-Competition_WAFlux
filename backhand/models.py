@@ -23,14 +23,32 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
+# --- Chat Models ---
+class Message(BaseModel):
+    id: str
+    sender: str  # 'me' or 'them'
+    text: str
+    time: str
+    status: str = "sent" # sent, delivered, read
+
 # --- Existing Models (Updated for User Ownership) ---
 class Contact(BaseModel):
     id: str
     name: str
     company: str
+    role: Optional[str] = "Lead" # Added
+    email: Optional[str] = None # Added
     value: str 
     status: str
     last_contact: str
+    phone: Optional[str] = None
+    tags: List[str] = []
+    notes: Optional[str] = "" # Added
+    
+    # Chat features merged into Contact for MVP
+    unread: int = 0 # Added
+    messages: List[Message] = [] # Added
+    
     # New: Link contact to a user
     owner_email: Optional[str] = None 
 
@@ -51,14 +69,7 @@ class Campaign(BaseModel):
     # New: Link campaign to a user
     owner_email: Optional[str] = None
 
-# --- Chat Models ---
-class Message(BaseModel):
-    id: str
-    sender: str  # 'me' or 'them'
-    text: str
-    time: str
-    status: str = "sent" # sent, delivered, read
-
+# Keeping Chat model for potential future separation, but Contact handles it for now
 class Chat(BaseModel):
     id: str
     name: str # Contact name

@@ -1,7 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { MessageCircle, Users, Zap } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    MessageCircle, Users, Zap,
+    Mail, Eye, CornerDownLeft, AlertTriangle, CheckCircle2,
+    ArrowUpRight, ArrowDownRight
+} from "lucide-react";
 import {
     PieChart, Pie, Cell, ResponsiveContainer,
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -60,10 +66,47 @@ const activity = [
     { id: 2, type: 'read', user: 'Alice Smith', time: '1m ago' },
     { id: 3, type: 'reply', user: 'Alice Smith', time: 'Just now', detail: 'Is this available in red?' },
     { id: 4, type: 'campaign_sent', user: 'Bob Jones', time: '5m ago', detail: 'Summer Sale Promo' },
-    { id: 5, type: 'failed', user: 'Charlie Day', time: '10m ago', detail: 'Invalid Number' },
+    { id: 5, type: 'failed', user: 'Charlie Day', time: '10m ago', detail: 'Invalid Number (Error 400)' },
+    { id: 6, type: 'read', user: 'Dana White', time: '12m ago' },
+    { id: 7, type: 'delivered', user: 'Eve Black', time: '15m ago' },
+    { id: 8, type: 'reply', user: 'Frank Green', time: '25m ago', detail: 'How much for the premium plan?' },
+    { id: 9, type: 'campaign_sent', user: 'Grace Lee', time: '1h ago', detail: 'Summer Sale Promo' },
+    { id: 10, type: 'read', user: 'Henry Ford', time: '1h ago' },
 ];
 
 export default function DashboardPage() {
+    const router = useRouter();
+    const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+
+    const handleEventClick = (event: any) => {
+        if (event.type === 'reply') {
+            // Navigate to chats
+            router.push(`/dashboard/chats?user=${encodeURIComponent(event.user)}`);
+        } else if (event.type === 'failed') {
+            // Toggle tooltip for failure
+            setSelectedEventId(selectedEventId === event.id ? null : event.id);
+        }
+    };
+
+    const getIcon = (type: string) => {
+        switch (type) {
+            case 'reply': return <CornerDownLeft className="h-4 w-4 text-white" />;
+            case 'failed': return <AlertTriangle className="h-4 w-4 text-white" />;
+            case 'read': return <Eye className="h-4 w-4 text-white" />;
+            case 'campaign_sent': return <CheckCircle2 className="h-4 w-4 text-white" />;
+            default: return <Mail className="h-4 w-4 text-white" />;
+        }
+    };
+
+    const getColorClass = (type: string) => {
+        switch (type) {
+            case 'reply': return 'bg-blue-500 ring-blue-500/20';
+            case 'failed': return 'bg-red-500 ring-red-500/20';
+            case 'read': return 'bg-[#02C173] ring-[#02C173]/20';
+            default: return 'bg-gray-400 ring-gray-400/20';
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -83,19 +126,36 @@ export default function DashboardPage() {
                         key={stat.name}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="overflow-hidden rounded-[20px] bg-white dark:bg-[#0b141a] px-4 py-5 shadow border border-gray-200 dark:border-white/5 sm:p-6 transition-colors"
+                        className="relative overflow-hidden rounded-[20px] bg-white dark:bg-[#0b141a] px-4 py-5 shadow-sm border border-gray-200 dark:border-white/5 sm:p-6 transition-all hover:shadow-md group"
                     >
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0 rounded-md bg-[#02C173]/10 p-3">
-                                <stat.icon className="h-6 w-6 text-[#02C173]" aria-hidden="true" />
+                        {/* Gradient Glow Effect on Hover */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#02C173]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                        <div className="relative flex items-center justify-between">
+                            <div className="flex items-center">
+                                <div className={`flex-shrink-0 rounded-xl p-3 ${stat.changeType === 'positive'
+                                    ? 'bg-[#02C173]/10 text-[#02C173]'
+                                    : 'bg-gray-100 dark:bg-white/5 text-gray-500'
+                                    }`}>
+                                    <stat.icon className="h-6 w-6" aria-hidden="true" />
+                                </div>
+                                <div className="ml-5">
+                                    <p className="truncate text-sm font-medium text-gray-500 dark:text-gray-400">{stat.name}</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stat.value}</p>
+                                </div>
                             </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="truncate text-sm font-medium text-gray-500 dark:text-gray-400">{stat.name}</dt>
-                                    <dd>
-                                        <div className="text-lg font-medium text-gray-900 dark:text-white">{stat.value}</div>
-                                    </dd>
-                                </dl>
+
+                            {/* Trend Indicator */}
+                            <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full border ${stat.changeType === 'positive'
+                                ? 'text-[#02C173] bg-[#02C173]/5 border-[#02C173]/20'
+                                : 'text-red-500 bg-red-500/5 border-red-500/20'
+                                }`}>
+                                {stat.changeType === 'positive' ? (
+                                    <ArrowUpRight className="h-3 w-3" />
+                                ) : (
+                                    <ArrowDownRight className="h-3 w-3" />
+                                )}
+                                {stat.change}
                             </div>
                         </div>
                     </motion.div>
@@ -106,38 +166,62 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* 1. Live Activity Feed (Span 1) */}
-                <div className="overflow-hidden rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 h-full transition-colors">
-                    <div className="p-6">
-                        <h3 className="text-base font-semibold leading-6 text-gray-900 dark:text-white mb-6">Live Activity Feed</h3>
+                <div className="overflow-hidden rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 h-full transition-colors flex flex-col">
+                    <div className="p-6 pb-2">
+                        <h3 className="text-base font-semibold leading-6 text-gray-900 dark:text-white">Live Activity Feed</h3>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-6 pt-2">
                         <div className="flow-root">
                             <ul role="list" className="-mb-8">
                                 {activity.map((event, eventIdx) => (
                                     <li key={event.id}>
                                         <div className="relative pb-8">
                                             {eventIdx !== activity.length - 1 ? (
-                                                <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-800" aria-hidden="true" />
+                                                <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-800" aria-hidden="true" />
                                             ) : null}
-                                            <div className="relative flex space-x-3">
+                                            <div
+                                                className={`relative flex space-x-3 cursor-pointer group rounded-lg -ml-2 p-2 hover:bg-gray-50 dark:hover:bg-white/5 transition-all ${selectedEventId === event.id ? 'bg-gray-50 dark:bg-white/5' : ''}`}
+                                                onClick={() => handleEventClick(event)}
+                                            >
                                                 <div>
-                                                    <span className={`flex h-8 w-8 items-center justify-center rounded-full ring-8 ring-[#0b141a] 
-                              ${event.type === 'reply' ? 'bg-blue-500/20' :
-                                                            event.type === 'failed' ? 'bg-red-500/20' :
-                                                                event.type === 'read' ? 'bg-[#02C173]/20' : 'bg-gray-400/20'
-                                                        }`}>
-                                                        {/* Visual dot */}
-                                                        <div className={`h-2.5 w-2.5 rounded-full 
-                                  ${event.type === 'reply' ? 'bg-blue-500' :
-                                                                event.type === 'failed' ? 'bg-red-500' :
-                                                                    event.type === 'read' ? 'bg-[#02C173]' : 'bg-gray-400'
-                                                            }`} />
+                                                    <span className={`flex h-8 w-8 items-center justify-center rounded-full ring-4 ring-white dark:ring-[#0b141a] ${getColorClass(event.type)}`}>
+                                                        {getIcon(event.type)}
                                                     </span>
                                                 </div>
                                                 <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                                                    <div className="whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                        <span className="font-medium text-gray-900 dark:text-white">{event.user}</span> {event.type.replace('_', ' ')}
-                                                    </div>
-                                                    <div className="whitespace-nowrap text-right text-sm text-gray-400 dark:text-gray-500">
-                                                        <time>{event.time}</time>
+                                                    <div className="flex flex-col w-full">
+                                                        <div className="flex justify-between w-full">
+                                                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                                <span className="font-medium text-gray-900 dark:text-white hover:underline decoration-[#02C173]">{event.user}</span>
+                                                                <span className="ml-1 opacity-80">{event.type.replace('_', ' ')}</span>
+                                                            </div>
+                                                            <div className="whitespace-nowrap text-right text-xs text-gray-400 dark:text-gray-500 tabular-nums">
+                                                                {event.time}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Details Row (Reply Preview or Failure Reason) */}
+                                                        {event.type === 'reply' && (
+                                                            <p className="mt-1 text-xs text-blue-500 bg-blue-500/10 p-1.5 rounded-md border border-blue-500/20 line-clamp-1">
+                                                                ↩ {event.detail}
+                                                            </p>
+                                                        )}
+
+                                                        {/* Failure Tooltip/Expansion */}
+                                                        <AnimatePresence>
+                                                            {selectedEventId === event.id && event.type === 'failed' && (
+                                                                <motion.div
+                                                                    initial={{ height: 0, opacity: 0 }}
+                                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                                    exit={{ height: 0, opacity: 0 }}
+                                                                    className="overflow-hidden"
+                                                                >
+                                                                    <div className="mt-2 text-xs text-red-400 bg-red-500/10 p-2 rounded-md border border-red-500/20">
+                                                                        ⚠️ Failure Reason: <span className="font-semibold">{event.detail}</span>
+                                                                    </div>
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
                                                     </div>
                                                 </div>
                                             </div>
@@ -146,6 +230,15 @@ export default function DashboardPage() {
                                 ))}
                             </ul>
                         </div>
+                    </div>
+                    {/* Footer */}
+                    <div className="border-t border-gray-200 dark:border-white/5 p-4 bg-gray-50 dark:bg-[#0b141a]/50">
+                        <button
+                            onClick={() => router.push('/dashboard/chats')}
+                            className="w-full text-center text-sm font-medium text-[#02C173] hover:text-[#02A060] transition-colors flex items-center justify-center gap-1"
+                        >
+                            View all activity <span aria-hidden="true">&rarr;</span>
+                        </button>
                     </div>
                 </div>
 
@@ -185,6 +278,10 @@ export default function DashboardPage() {
                                         paddingAngle={5}
                                         dataKey="value"
                                         stroke="none"
+                                        isAnimationActive={true}
+                                        animationBegin={0}
+                                        animationDuration={1500}
+                                        animationEasing="ease-out"
                                     >
                                         {statusData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.color} />
@@ -203,11 +300,15 @@ export default function DashboardPage() {
                                 <AreaChart data={volumeData}>
                                     <defs>
                                         <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#02C173" stopOpacity={0.3} />
+                                            <stop offset="5%" stopColor="#02C173" stopOpacity={0.3}>
+                                                <animate attributeName="stop-opacity" values="0.3;0.6;0.3" dur="3s" repeatCount="indefinite" />
+                                            </stop>
                                             <stop offset="95%" stopColor="#02C173" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="colorReplies" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}>
+                                                <animate attributeName="stop-opacity" values="0.3;0.6;0.3" dur="4s" repeatCount="indefinite" />
+                                            </stop>
                                             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
@@ -215,8 +316,27 @@ export default function DashboardPage() {
                                     <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
                                     <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
                                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }} />
-                                    <Area type="monotone" dataKey="sent" stroke="#02C173" strokeWidth={3} fillOpacity={1} fill="url(#colorSent)" />
-                                    <Area type="monotone" dataKey="replies" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorReplies)" />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="sent"
+                                        stroke="#02C173"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorSent)"
+                                        animationDuration={2000}
+                                        animationEasing="ease-in-out"
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="replies"
+                                        stroke="#3b82f6"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorReplies)"
+                                        animationDuration={2000}
+                                        animationEasing="ease-in-out"
+                                        animationBegin={500}
+                                    />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -229,6 +349,12 @@ export default function DashboardPage() {
                         <div className="h-[200px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={engagementData}>
+                                    <defs>
+                                        <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#02C173" stopOpacity={1} />
+                                            <stop offset="100%" stopColor="#02C173" stopOpacity={0.1} />
+                                        </linearGradient>
+                                    </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                     <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
                                     <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
@@ -236,7 +362,16 @@ export default function DashboardPage() {
                                         cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                                         contentStyle={{ backgroundColor: '#1f2c34', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
                                     />
-                                    <Bar dataKey="rate" fill="#02C173" radius={[4, 4, 0, 0]} barSize={20} />
+                                    <Bar
+                                        dataKey="rate"
+                                        fill="url(#colorBar)"
+                                        radius={[10, 10, 0, 0]}
+                                        barSize={32}
+                                        background={{ fill: 'currentColor', opacity: 0.05, radius: [10, 10, 0, 0] }}
+                                        animationDuration={1500}
+                                        animationBegin={300}
+                                        animationEasing="ease-out"
+                                    />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>

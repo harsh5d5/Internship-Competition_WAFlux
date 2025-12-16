@@ -127,9 +127,81 @@ def read_root():
 
 @app.get("/api/leads", response_model=List[Contact])
 def get_leads(current_user: User = Depends(get_current_active_user)):
-    # Fetch contacts owned by the current user from MongoDB
     contacts_cursor = db.contacts.find({"owner_email": current_user.email})
-    return list(contacts_cursor)
+    contacts = list(contacts_cursor)
+    
+    # Check if we need to seed demo data (if total contacts < 3, just to be safe and helpful)
+    # Or specifically check if "Sarah Wilson" is missing.
+    existing_names = {c['name'] for c in contacts}
+    
+    demo_contacts = []
+    
+    if "Sarah Wilson" not in existing_names:
+        demo_contacts.append(Contact(
+            id=str(uuid.uuid4()),
+            name="Sarah Wilson",
+            company="Global Tech",
+            role="VP Sales",
+            email="sarah@globaltech.com",
+            phone="+1 (555) 010-9988",
+            value="$45,000",
+            status="active",
+            last_contact="10:30 AM",
+            tags=["vip", "enterprise"],
+            notes="Needs a custom contract by Friday.",
+            owner_email=current_user.email,
+            unread=2,
+            messages=[
+                Message(id=str(uuid.uuid4()), sender="them", text="Hi, we are interested in the premium plan.", time="Yesterday", status="read"),
+                Message(id=str(uuid.uuid4()), sender="me", text="Great! I can send you the brochure.", time="Yesterday", status="read"),
+                Message(id=str(uuid.uuid4()), sender="them", text="Please do. Also, is the API included?", time="10:30 AM", status="sent")
+            ]
+        ))
+
+    if "Dr. Aisha Gupta" not in existing_names:
+        demo_contacts.append(Contact(
+            id=str(uuid.uuid4()),
+            name="Dr. Aisha Gupta",
+            company="City Hospital",
+            role="Chief Surgeon",
+            email="aisha.g@hospital.org",
+            phone="+91 98765 43210",
+            value="$0",
+            status="urgent", # diff status
+            last_contact="Just now",
+            tags=["medical", "urgent"],
+            notes="Inquiring about emergency alert features.",
+            owner_email=current_user.email,
+            unread=1,
+            messages=[
+                Message(id=str(uuid.uuid4()), sender="them", text="We have a system outage.", time="Just now", status="sent")
+            ]
+        ))
+        
+    if "Rahul Sharma" not in existing_names:
+        demo_contacts.append(Contact(
+            id=str(uuid.uuid4()),
+            name="Rahul Sharma",
+            company="Sharma Real Estate",
+            role="Broker",
+            email="rahulse@properties.com",
+            phone="+91 8888 2222 11",
+            value="$1.2M",
+            status="inactive",
+            last_contact="1 week ago",
+            tags=["real-estate", "cold"],
+            notes="Not interested currently.",
+            owner_email=current_user.email,
+            messages=[]
+        ))
+
+    if demo_contacts:
+        for contact in demo_contacts:
+            db.contacts.insert_one(contact.dict())
+        # Refresh list
+        contacts.extend([c.dict() for c in demo_contacts])
+
+    return contacts
 
 
 class UpdateStatusRequest(BaseModel):
@@ -157,11 +229,144 @@ def update_lead_status(lead_id: str, request: UpdateStatusRequest, current_user:
 def create_lead(lead: Contact, current_user: User = Depends(get_current_active_user)):
     # Tag lead with owner and ID
     lead.owner_email = current_user.email
-    lead.id = str(uuid.uuid4())
+    # Create ID if missing
+    if not lead.id:
+        lead.id = str(uuid.uuid4())
+    
+    # Ensure messages is empty list if not provided
+    if lead.messages is None:
+        lead.messages = []
     
     # Insert into MongoDB
     db.contacts.insert_one(lead.dict())
     return lead
+
+@app.delete("/api/leads/{lead_id}")
+def delete_lead(lead_id: str, current_user: User = Depends(get_current_active_user)):
+    # Find and delete
+    result = db.contacts.delete_one({"id": lead_id, "owner_email": current_user.email})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Lead not found or unauthorized")
+    return {"detail": "Lead deleted successfully"}
+
+@app.put("/api/leads/{lead_id}", response_model=Contact)
+def update_lead(lead_id: str, lead_update: Contact, current_user: User = Depends(get_current_active_user)):
+    # Verify existence
+    existing = db.contacts.find_one({"id": lead_id, "owner_email": current_user.email})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    # Update fields (exclude ID and owner_email to prevent tampering)
+    update_data = lead_update.dict(exclude={"id", "owner_email"}, exclude_unset=True)
+    
+    db.contacts.update_one(
+        {"id": lead_id},
+        {"$set": update_data}
+    )
+    
+    # Return updated
+    updated_custom = {**existing, **update_data}
+    return Contact(**updated_custom)
+
+# --- Message Persistence on Leads ---
+
+# --- Mock Bot Logic ---
+import asyncio
+import random
+
+async def simulate_reply(lead_id: str, user_message: str, owner_email: str):
+    # Simulate typing delay
+    await asyncio.sleep(3)
+    
+    # Simple keyword-based logic
+    msg_lower = user_message.lower()
+    reply_text = "Interesting. Tell me more."
+    
+    if any(x in msg_lower for x in ["hi", "hello", "hey"]):
+        reply_text = "Hello! Thanks for reaching out. How can I help you today?"
+    elif "price" in msg_lower or "cost" in msg_lower:
+        reply_text = "Our enterprise plan starts at $99/month. Would you like a quote?"
+    elif "demo" in msg_lower:
+        reply_text = "Sure, I'm free tomorrow at 2 PM for a demo. Does that work?"
+    elif "thank" in msg_lower:
+        reply_text = "You're welcome! Let me know if you need anything else."
+    elif "yes" in msg_lower:
+        reply_text = "Great! I'll send the details shortly."
+    else:
+        replies = [
+            "Could you clarify that?", 
+            "I see. Let me check with my team.", 
+            "Sounds good.",
+            "Can you send me the PDF?"
+        ]
+        reply_text = random.choice(replies)
+
+    # Create Message Object
+    reply_msg = {
+        "id": str(uuid.uuid4()),
+        "sender": "them",
+        "text": reply_text,
+        "time": "Just now",
+        "status": "sent" # Bot sent it
+    }
+    
+    # 1. Fetch current contact to get unread count safely
+    current_contact = db.contacts.find_one({"id": lead_id, "owner_email": owner_email})
+    current_unread = current_contact.get("unread", 0) if current_contact else 0
+    
+    # 2. Update DB
+    result = db.contacts.update_one(
+        {"id": lead_id, "owner_email": owner_email},
+        {
+            "$push": {"messages": reply_msg},
+            "$set": {
+                "last_contact": "Just now",
+                "unread": current_unread + 1
+            }
+        }
+    )
+    print(f"Bot replied to {lead_id}: {reply_text}")
+
+
+from fastapi import BackgroundTasks
+
+@app.post("/api/leads/{lead_id}/messages", response_model=Message)
+def send_lead_message(lead_id: str, message: Message, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_active_user)):
+    # Verify ownership
+    contact = db.contacts.find_one({"id": lead_id, "owner_email": current_user.email})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    # Prepare message
+    if not message.id:
+        message.id = str(uuid.uuid4())
+        
+    # Update DB with USER message
+    db.contacts.update_one(
+        {"id": lead_id},
+        {
+            "$push": {"messages": message.dict()},
+            "$set": {
+                "last_contact": "Just now", 
+            }
+        }
+    )
+    
+    # Trigger Bot Reply in Background
+    background_tasks.add_task(simulate_reply, lead_id, message.text, current_user.email)
+
+    return message
+
+@app.put("/api/leads/{lead_id}/read")
+def mark_lead_read(lead_id: str, current_user: User = Depends(get_current_active_user)):
+    result = db.contacts.update_one(
+        {"id": lead_id, "owner_email": current_user.email},
+        {"$set": {"unread": 0}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return {"status": "success"}
+
 
 @app.get("/api/campaigns", response_model=List[Campaign])
 def get_campaigns(current_user: User = Depends(get_current_active_user)):
@@ -179,44 +384,17 @@ def create_campaign(campaign: Campaign, current_user: User = Depends(get_current
     campaigns_db.append(campaign)
     return campaign
 
-# --- Chat Endpoints ---
+# --- Legacy Chat Endpoints (Optional/Deprecated if using Leads as Chats) ---
 
 @app.get("/api/chats", response_model=List[Chat])
 def get_chats(current_user: User = Depends(get_current_active_user)):
-    # Fetch chats owned by the current user
     chats_cursor = db.chats.find({"owner_email": current_user.email})
     return list(chats_cursor)
 
 @app.post("/api/chats", response_model=Chat)
 def create_chat(chat: Chat, current_user: User = Depends(get_current_active_user)):
     chat.owner_email = current_user.email
-    # Ensure ID is present
     if not chat.id:
         chat.id = str(uuid.uuid4())
-    
     db.chats.insert_one(chat.dict())
     return chat
-
-@app.post("/api/chats/{chat_id}/messages", response_model=Message)
-def send_message(chat_id: str, message: Message, current_user: User = Depends(get_current_active_user)):
-    # Verify ownership of the chat
-    chat = db.chats.find_one({"id": chat_id, "owner_email": current_user.email})
-    if not chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
-    
-    # Ensure message has ID and timestamp if missing (though frontend should send it)
-    if not message.id:
-        message.id = str(uuid.uuid4())
-    
-    # Update the chat document: push message to array and update last_message
-    db.chats.update_one(
-        {"id": chat_id},
-        {
-            "$push": {"messages": message.dict()},
-            "$set": {
-                "last_message": message.text, 
-                "time": message.time
-            }
-        }
-    )
-    return message
