@@ -6,7 +6,15 @@ import Link from 'next/link';
 import { CheckCircle2, ShieldCheck, Activity } from 'lucide-react';
 
 export default function HeroSection() {
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const navItems = ['HOME', 'DASHBOARD', 'CONTACTS', 'CAMPAIGNS', 'TEMPLATES'];
+
+  useEffect(() => {
+    // Simple cookie check
+    const cookies = document.cookie.split(';');
+    const authCookie = cookies.find(c => c.trim().startsWith('auth=true'));
+    setIsLoggedIn(!!authCookie);
+  }, []);
 
   return (
     <div className="relative bg-[#060707] w-full min-h-screen overflow-hidden selection:bg-[#02C173] selection:text-black">
@@ -37,19 +45,27 @@ export default function HeroSection() {
           {/* Nav Items */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item, index) => (
-              <div
+              <Link
                 key={index}
+                href={
+                  item === 'DASHBOARD' ? '/dashboard' :
+                    item === 'CONTACTS' ? '/dashboard/contacts' :
+                      item === 'CAMPAIGNS' ? '/campaigns' :
+                        item === 'TEMPLATES' ? '/templates' : '#'
+                }
                 className="px-4 py-2 text-sm font-semibold text-white/70 hover:text-white hover:bg-white/10 rounded-full cursor-pointer transition-all duration-300"
               >
                 {item}
-              </div>
+              </Link>
             ))}
           </div>
 
           {/* Action Button (Placeholder for 'Connect' or similar) */}
-          <button className="hidden md:block bg-[#02C173]/20 hover:bg-[#02C173]/30 text-[#02C173] px-5 py-2 rounded-full text-sm font-bold transition-all border border-[#02C173]/50">
-            Connect
-          </button>
+          <Link href="/dashboard">
+            <button className="hidden md:block bg-[#02C173]/20 hover:bg-[#02C173]/30 text-[#02C173] px-5 py-2 rounded-full text-sm font-bold transition-all border border-[#02C173]/50">
+              Dashboard
+            </button>
+          </Link>
         </nav>
       </div>
 
@@ -67,9 +83,9 @@ export default function HeroSection() {
           </p>
 
           <div className="mt-10 flex gap-4">
-            <Link href="/login">
+            <Link href={isLoggedIn ? "/dashboard" : "/login"}>
               <button className="bg-[#02C173] text-black font-bold py-4 px-10 rounded-full hover:bg-[#029a5b] transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(2,193,115,0.4)] hover:shadow-[0_0_30px_rgba(2,193,115,0.6)]">
-                Login to Dashboard
+                {isLoggedIn ? "Go to Dashboard" : "Login / Signup"}
               </button>
             </Link>
             <button className="group border border-white/20 hover:border-[#02C173] bg-white/5 hover:bg-[#02C173]/10 text-white hover:text-[#02C173] font-bold py-4 px-10 rounded-full transition-all backdrop-blur-sm">
