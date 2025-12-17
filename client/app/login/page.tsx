@@ -49,6 +49,14 @@ export default function LoginPage() {
 
     const handleLogin = async () => {
         setError("");
+
+        // Email Validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError("Please enter the correct email");
+            return;
+        }
+
         try {
             const formData = new FormData();
             formData.append('username', email); // backend expects 'username' for OAuth2
@@ -75,6 +83,14 @@ export default function LoginPage() {
 
     const handleSignup = async () => {
         setError("");
+
+        // Email Validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError("Please enter the correct email");
+            return;
+        }
+
         try {
             const res = await fetch('http://localhost:8000/signup', {
                 method: 'POST',

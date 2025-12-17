@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -61,30 +61,45 @@ const stats = [
     { name: 'Active Conversions', value: '45', change: '-2.1%', changeType: 'negative', icon: Zap },
 ];
 
-const activity = [
-    { id: 1, type: 'campaign_sent', user: 'Alice Smith', time: '2m ago', detail: 'Summer Sale Promo' },
-    { id: 2, type: 'read', user: 'Alice Smith', time: '1m ago' },
-    { id: 3, type: 'reply', user: 'Alice Smith', time: 'Just now', detail: 'Is this available in red?' },
-    { id: 4, type: 'campaign_sent', user: 'Bob Jones', time: '5m ago', detail: 'Summer Sale Promo' },
-    { id: 5, type: 'failed', user: 'Charlie Day', time: '10m ago', detail: 'Invalid Number (Error 400)' },
-    { id: 6, type: 'read', user: 'Dana White', time: '12m ago' },
-    { id: 7, type: 'delivered', user: 'Eve Black', time: '15m ago' },
-    { id: 8, type: 'reply', user: 'Frank Green', time: '25m ago', detail: 'How much for the premium plan?' },
-    { id: 9, type: 'campaign_sent', user: 'Grace Lee', time: '1h ago', detail: 'Summer Sale Promo' },
-    { id: 10, type: 'read', user: 'Henry Ford', time: '1h ago' },
-];
+// Removed static activity data
 
 export default function DashboardPage() {
     const router = useRouter();
     const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+    const [activity, setActivity] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchActivity = async () => {
+            const token = localStorage.getItem("access_token");
+            if (!token) return;
+
+            try {
+                const res = await fetch("http://localhost:8000/api/dashboard/activity", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setActivity(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch activity", error);
+            }
+        };
+        fetchActivity();
+    }, []);
 
     const handleEventClick = (event: any) => {
-        if (event.type === 'reply') {
-            // Navigate to chats
-            router.push(`/dashboard/chats?user=${encodeURIComponent(event.user)}`);
-        } else if (event.type === 'failed') {
+        if (event.type === 'failed') {
             // Toggle tooltip for failure
             setSelectedEventId(selectedEventId === event.id ? null : event.id);
+        } else {
+            // Navigate to chats for reply, campaign_sent, read, etc.
+            // Use contact_id if available, otherwise fallback to user name (though Chats page might not support name param fully yet)
+            if (event.contact_id) {
+                router.push(`/dashboard/chats?chatId=${event.contact_id}`);
+            } else {
+                router.push(`/dashboard/chats?user=${encodeURIComponent(event.user)}`);
+            }
         }
     };
 
@@ -202,8 +217,9 @@ export default function DashboardPage() {
 
                                                         {/* Details Row (Reply Preview or Failure Reason) */}
                                                         {event.type === 'reply' && (
-                                                            <p className="mt-1 text-xs text-blue-500 bg-blue-500/10 p-1.5 rounded-md border border-blue-500/20 line-clamp-1">
-                                                                ↩ {event.detail}
+                                                            <p className="mt-1 text-xs text-blue-500 bg-blue-500/10 p-2.5 rounded-md border border-blue-500/20 break-words leading-relaxed">
+                                                                <span className="inline-block mr-1 font-bold">↩</span>
+                                                                {event.detail}
                                                             </p>
                                                         )}
 

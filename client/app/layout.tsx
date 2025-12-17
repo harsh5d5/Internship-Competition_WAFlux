@@ -3,6 +3,8 @@ import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
+
+
 const ibmPlexSans = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
   weight: ["400", "700"],
@@ -36,7 +38,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+
           {children}
+
         </ThemeProvider>
       </body>
     </html>

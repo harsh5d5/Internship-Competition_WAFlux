@@ -2,13 +2,18 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MoreVertical, Phone, Video, Paperclip, Mic, Send, Info, Tag, DollarSign, X, Image as ImageIcon, FileText, Camera, LogOut, Check, CheckCheck, LayoutGrid, Settings, Zap } from "lucide-react";
+import {
+    Search, Paperclip, MoreVertical, Phone, Video,
+    Smile, Mic, Check, CheckCheck, Menu, User,
+    MessageSquare, Bell, LogOut, ChevronLeft, Info,
+    FileText, Image as ImageIcon, ArrowDownRight, Camera,
+    Send, X, Zap, LayoutGrid, Settings, Tag, DollarSign
+} from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 export default function ChatsPage() {
     const searchParams = useSearchParams();
     const paramChatId = searchParams.get('chatId');
-    const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
     const [chats, setChats] = useState<any[]>([]);
     const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -21,6 +26,22 @@ export default function ChatsPage() {
     const [isRecording, setIsRecording] = useState(false);
     const [showAttachments, setShowAttachments] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [inputMessage, setInputMessage] = useState("");
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Helper to mark as read
+    const markChatAsRead = async (id: string) => {
+        const token = localStorage.getItem("access_token");
+        try {
+            await fetch(`http://localhost:8000/api/leads/${id}/read`, {
+                method: 'PUT',
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+        } catch (err) {
+            console.error("Failed to mark as read", err);
+        }
+    };
 
     // Fetch Chats (Leads) with Polling
     const fetchChats = async () => {
@@ -29,46 +50,47 @@ export default function ChatsPage() {
             const res = await fetch("http://localhost:8000/api/leads", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-
-            if (res.ok) {
-                const leads = await res.json();
-                const formattedChats = leads.map((lead: any) => ({
-                    id: lead.id || lead._id,
-                    name: lead.name,
-                    avatar: lead.name ? lead.name.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase() : "U",
-                    company: lead.company || "Unknown",
-                    role: lead.role || "Lead",
-                    email: lead.email || "No email",
-                    phone: lead.phone || "No Phone",
-                    lastMessage: lead.messages && lead.messages.length > 0
-                        ? lead.messages[lead.messages.length - 1].text
-                        : "Start a conversation",
-                    time: lead.last_contact || "New",
-                    unread: lead.unread || 0,
-                    online: lead.status === 'Active',
-                    status: lead.status || "New",
-                    value: lead.value || "$0",
-                    notes: lead.notes || "",
-                    tags: lead.tags || [],
-                    messages: lead.messages || []
-                }));
-
-                // Only update if data changed (simple check could be added, but for now just set)
-                setChats(formattedChats);
-
-                // Keep selected chat ID but update its content from new data if needed
-                // (Handled by selectedChat derivation)
+            if (res.status === 401) {
+                // router.push("/login"); // Optional: handle redirect
+                return;
             }
+            const data = await res.json();
+
+            const formattedChats = data.map((lead: any) => ({
+                id: lead.id || lead._id,
+                name: lead.name,
+                avatar: lead.avatar || (lead.name ? lead.name.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase() : "U"),
+                company: lead.company || "Unknown",
+                role: lead.role || "Lead",
+                email: lead.email || "No email",
+                phone: lead.phone || "No phone",
+                value: lead.value || "$0",
+                status: lead.status || "active",
+                tags: lead.tags || [],
+                lastMessage: lead.messages?.length > 0 ? lead.messages[lead.messages.length - 1].text : "No messages",
+                time: lead.last_contact || "12:00 PM",
+                unread: lead.id === selectedChatId ? 0 : (lead.unread || 0), // FIX: Force 0 if active
+                online: Math.random() > 0.7,
+                messages: lead.messages || []
+            }));
+
+            // Check if active chat has unread messages on server and mark read
+            const activeChatData = data.find((d: any) => d.id === selectedChatId);
+            if (activeChatData && activeChatData.unread > 0) {
+                markChatAsRead(selectedChatId!);
+            }
+
+            setChats(formattedChats);
         } catch (error) {
             console.error("Failed to fetch chats", error);
         }
     };
 
     useEffect(() => {
-        fetchChats(); // Initial fetch
-        const interval = setInterval(fetchChats, 3000); // Poll every 3s
+        fetchChats();
+        const interval = setInterval(fetchChats, 3000);
         return () => clearInterval(interval);
-    }, []);
+    }, [selectedChatId]); // FIX: Add dependency to update closure
 
     // Initial load selection logic separate to avoid re-selecting constantly
     useEffect(() => {
@@ -81,7 +103,7 @@ export default function ChatsPage() {
         if (paramChatId && chats.length > 0) {
             handleSelectChat(paramChatId, chats);
         }
-    }, [paramChatId]);
+    }, [paramChatId, chats.length]);
 
     const selectedChat = chats.find(c => c.id === selectedChatId);
 
@@ -103,70 +125,137 @@ export default function ChatsPage() {
         }));
 
         // API Call to mark as read
-        const token = localStorage.getItem("access_token");
-        try {
-            await fetch(`http://localhost:8000/api/leads/${id}/read`, {
-                method: 'PUT',
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-        } catch (err) {
-            console.error("Failed to mark as read", err);
-        }
+        await markChatAsRead(id);
     };
 
     // Handle Send Message
-    const handleSendMessage = async () => {
-        if (!inputText.trim() || !selectedChatId) return;
+    const handleSendMessage = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
 
-        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (!inputMessage.trim() && !fileInputRef.current?.files?.length) return;
+
         const newMessage = {
-            id: crypto.randomUUID(),
-            text: inputText,
-            sender: "me",
-            time: timestamp,
-            status: "sent"
+            id: Date.now(),
+            sender: 'me',
+            text: inputMessage,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status: 'sent',
+            avatar: "https://i.pravatar.cc/150?u=me"
         };
 
+        // Optimistic UI update
         const updatedChats = chats.map(chat => {
             if (chat.id === selectedChatId) {
                 return {
                     ...chat,
                     messages: [...chat.messages, newMessage],
-                    lastMessage: inputText,
-                    time: "Just now"
+                    lastMessage: inputMessage,
+                    time: newMessage.time
                 };
             }
             return chat;
         });
 
         setChats(updatedChats);
-        setInputText("");
+        setInputMessage("");
 
-        const token = localStorage.getItem("access_token");
+        // Sync with backend
         try {
-            const res = await fetch(`http://localhost:8000/api/leads/${selectedChatId}/messages`, {
+            const token = localStorage.getItem("access_token");
+            await fetch(`http://localhost:8000/api/leads/${selectedChatId}/messages`, {
                 method: 'POST',
                 headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(newMessage)
+                body: JSON.stringify({
+                    text: newMessage.text,
+                    sender: 'me',
+                    time: newMessage.time
+                })
             });
-
-            if (res.ok) {
-                setTimeout(() => {
-                    setChats(prev => prev.map(c => {
-                        if (c.id === selectedChatId) {
-                            const updatedMsgs = c.messages.map((m: any) => m.id === newMessage.id ? { ...m, status: 'delivered' } : m);
-                            return { ...c, messages: updatedMsgs };
-                        }
-                        return c;
-                    }));
-                }, 1000);
-            }
         } catch (error) {
             console.error("Failed to send message", error);
         }
+    };
+
+    // Handle File Upload
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const token = localStorage.getItem("access_token");
+            const response = await fetch('http://localhost:8000/api/upload', {
+                method: 'POST',
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData,
+            });
+
+            if (!response.ok) throw new Error('Upload failed');
+
+            const data = await response.json();
+
+            // Send message with attachment
+            const newMessage = {
+                id: Date.now(),
+                sender: 'me',
+                text: "",
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: 'sent',
+                avatar: "https://i.pravatar.cc/150?u=me",
+                attachment: {
+                    type: data.type,
+                    url: data.url,
+                    name: data.name
+                }
+            };
+
+            // Optimistic UI update
+            const updatedChats = chats.map(chat => {
+                if (chat.id === selectedChatId) {
+                    return {
+                        ...chat,
+                        messages: [...chat.messages, newMessage],
+                        lastMessage: "📎 Attachment",
+                        lastMessageTime: newMessage.time
+                    };
+                }
+                return chat;
+            });
+
+            setChats(updatedChats);
+            setShowAttachments(false);
+
+            // Sync with backend
+            await fetch(`http://localhost:8000/api/leads/${selectedChatId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    text: "",
+                    sender: 'me',
+                    time: newMessage.time,
+                    attachment: {
+                        type: data.type,
+                        url: data.url,
+                        name: data.name
+                    }
+                })
+            });
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Failed to upload file");
+        }
+
+        // Reset input
+        event.target.value = '';
     };
 
     // Filter Logic
@@ -237,8 +326,12 @@ export default function ChatsPage() {
                                 ${selectedChatId === chat.id ? 'bg-[#202c33]' : ''}`}
                         >
                             <div className="relative shrink-0">
-                                <div className="w-12 h-12 rounded-full bg-[#2a3942] flex items-center justify-center font-medium text-lg text-gray-300">
-                                    {chat.avatar}
+                                <div className="w-12 h-12 rounded-full bg-[#2a3942] flex items-center justify-center font-medium text-lg text-gray-300 overflow-hidden">
+                                    {chat.avatar.length > 2 ? (
+                                        <img src={chat.avatar} alt={chat.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        chat.avatar
+                                    )}
                                 </div>
                                 {chat.online && (
                                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#00a884] border-2 border-[#111b21] rounded-full"></div>
@@ -275,8 +368,12 @@ export default function ChatsPage() {
                                 className="flex items-center gap-4 cursor-pointer"
                                 onClick={() => setShowRightSidebar(!showRightSidebar)}
                             >
-                                <div className="w-10 h-10 rounded-full bg-[#2a3942] flex items-center justify-center font-medium text-sm text-gray-300">
-                                    {selectedChat.avatar}
+                                <div className="w-10 h-10 rounded-full bg-[#2a3942] flex items-center justify-center font-medium text-sm text-gray-300 overflow-hidden">
+                                    {selectedChat.avatar.length > 2 ? (
+                                        <img src={selectedChat.avatar} alt={selectedChat.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        selectedChat.avatar
+                                    )}
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-white text-base leading-tight">{selectedChat.name}</h3>
@@ -285,10 +382,12 @@ export default function ChatsPage() {
                             </div>
 
                             <div className="flex items-center gap-6 pr-2">
-                                <Video className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
                                 <Phone className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
                                 <div className="w-px h-6 bg-gray-600/30"></div>
-                                <Search className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
+                                <Info
+                                    onClick={() => setShowRightSidebar(!showRightSidebar)}
+                                    className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors"
+                                />
                             </div>
                         </div>
 
@@ -309,6 +408,28 @@ export default function ChatsPage() {
                                             ? 'bg-[#005c4b] text-white rounded-tr-none'
                                             : 'bg-[#202c33] text-gray-100 rounded-tl-none'}`}
                                     >
+                                        {/* Attachment Rendering */}
+                                        {msg.attachment && (
+                                            <div className="mb-1 rounded overflow-hidden">
+                                                {msg.attachment.type && msg.attachment.type.startsWith('image') ? (
+                                                    <img src={msg.attachment.url} alt={msg.attachment.name} className="max-w-full h-auto rounded-lg max-h-64 object-cover" />
+                                                ) : (msg.attachment.url ? (
+                                                    <div className="flex items-center gap-3 bg-black/10 p-3 rounded-lg">
+                                                        <div className="bg-red-500/20 p-2 rounded text-red-400">
+                                                            <FileText className="w-6 h-6" />
+                                                        </div>
+                                                        <div className="overflow-hidden">
+                                                            <p className="font-medium truncate text-sm">{msg.attachment.name}</p>
+                                                            <p className="text-xs opacity-70 uppercase">{msg.attachment.type.split('/')[1] || 'FILE'}</p>
+                                                        </div>
+                                                        <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" className="ml-auto p-2 hover:bg-black/10 rounded-full">
+                                                            <ArrowDownRight className="w-5 h-5" />
+                                                        </a>
+                                                    </div>
+                                                ) : null)}
+                                            </div>
+                                        )}
+
                                         <p className="leading-relaxed px-1 text-[14.2px]">{msg.text}</p>
                                         <div className="flex items-center justify-end gap-1 mt-1 pl-4 min-w-[4rem]">
                                             <span className={`text-[10px] ${msg.sender === 'me' ? 'text-white/60' : 'text-gray-400'}`}>{msg.time}</span>
@@ -330,18 +451,58 @@ export default function ChatsPage() {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        <div className="min-h-[62px] px-4 py-2 bg-[#202c33] z-10 flex items-end mb-0">
+                        <div className="min-h-[62px] px-4 py-2 bg-[#202c33] z-10 flex items-end mb-0 relative">
+                            {/* Attachment Menu */}
+                            <AnimatePresence>
+                                {showAttachments && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                        className="absolute bottom-20 left-4 flex flex-col gap-4 mb-2 z-50"
+                                    >
+                                        <div className="flex flex-col gap-4">
+                                            <button
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="flex items-center gap-3 group"
+                                            >
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-t from-purple-600 to-purple-500 shadow-lg flex items-center justify-center text-white transition-transform group-hover:-translate-y-1">
+                                                    <FileText className="w-6 h-6" />
+                                                </div>
+                                                {/* Label could be added here if needed */}
+                                            </button>
+                                            <button
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="flex items-center gap-3 group"
+                                            >
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-t from-pink-600 to-pink-500 shadow-lg flex items-center justify-center text-white transition-transform group-hover:-translate-y-1">
+                                                    <ImageIcon className="w-6 h-6" />
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Hidden File Input */}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleFileUpload}
+                            />
+
                             <button
-                                className={`p-3 mr-2 rounded-full transition-colors hover:bg-[#374248] text-gray-400`}
+                                className={`p-3 mr-2 rounded-full transition-colors hover:bg-[#374248] ${showAttachments ? 'bg-[#374248] text-gray-300' : 'text-gray-400'}`}
                                 onClick={() => setShowAttachments(!showAttachments)}
                             >
-                                <Paperclip className="w-6 h-6" />
+                                <Paperclip className={`w-6 h-6 transition-transform ${showAttachments ? 'rotate-45' : ''}`} />
                             </button>
                             <div className="flex-1 bg-[#2a3942] rounded-lg flex items-center mb-1.5">
                                 <input
                                     type="text"
-                                    value={inputText}
-                                    onChange={(e) => setInputText(e.target.value)}
+                                    value={inputMessage}
+                                    onChange={(e) => setInputMessage(e.target.value)}
                                     placeholder="Type a message"
                                     className="flex-1 bg-transparent text-white px-4 py-2.5 text-[15px] focus:outline-none placeholder-gray-400"
                                     onKeyDown={(e) => {
@@ -349,7 +510,7 @@ export default function ChatsPage() {
                                     }}
                                 />
                             </div>
-                            {inputText.trim() ? (
+                            {inputMessage.trim() ? (
                                 <button
                                     onClick={handleSendMessage}
                                     className="p-3 ml-2 mb-1.5 bg-[#00a884] hover:bg-[#02906f] rounded-full text-[#111b21] transition-transform active:scale-95 shadow-lg"
@@ -399,8 +560,12 @@ export default function ChatsPage() {
 
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
                             <div className="text-center pt-4">
-                                <div className="w-32 h-32 rounded-full bg-[#2a3942] mx-auto flex items-center justify-center text-4xl text-gray-300 mb-4 shadow-xl">
-                                    {selectedChat.avatar}
+                                <div className="w-32 h-32 rounded-full bg-[#2a3942] mx-auto flex items-center justify-center text-4xl text-gray-300 mb-4 shadow-xl overflow-hidden">
+                                    {selectedChat.avatar.length > 2 ? (
+                                        <img src={selectedChat.avatar} alt={selectedChat.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        selectedChat.avatar
+                                    )}
                                 </div>
                                 <h2 className="text-xl font-semibold text-white mb-1">{selectedChat.name}</h2>
                                 <p className="text-gray-400">{selectedChat.phone}</p>

@@ -14,6 +14,7 @@ export interface Contact {
     status: string;
     tags: string[];
     last_contact: string;
+    avatar?: string;
 }
 
 export default function ContactsPage() {
@@ -284,11 +285,20 @@ export default function ContactsPage() {
                                 >
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
                                         <div className="flex items-center gap-3">
-                                            <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${getAvatarColor(person.name)}`}>
-                                                {person.name.charAt(0).toUpperCase()}
-                                            </div>
+                                            {person.avatar ? (
+                                                <img
+                                                    src={person.avatar}
+                                                    alt={person.name}
+                                                    className="h-9 w-9 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${getAvatarColor(person.name)}`}>
+                                                    {person.name.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
                                             <div>
                                                 <div className="font-semibold text-gray-900 dark:text-white">{person.name}</div>
+
                                                 <div className="text-xs text-gray-500">{person.company}</div>
                                                 <div className="flex gap-1 mt-0.5">
                                                     {person.tags?.map(tag => (

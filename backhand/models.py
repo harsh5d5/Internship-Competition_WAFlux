@@ -7,6 +7,15 @@ class User(BaseModel):
     email: Optional[str] = None
     full_name: Optional[str] = None
     disabled: Optional[bool] = None
+    avatar: Optional[str] = None # New field for profile picture
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    avatar: Optional[str] = None
+
+class PasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
 
 class UserInDB(User):
     hashed_password: str
@@ -24,12 +33,26 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 # --- Chat Models ---
+class Attachment(BaseModel):
+    type: str # 'image', 'document'
+    url: str
+    name: str
+
+
+
 class Message(BaseModel):
-    id: str
+    id: Optional[str] = None
     sender: str  # 'me' or 'them'
-    text: str
+    text: Optional[str] = ""
     time: str
     status: str = "sent" # sent, delivered, read
+    attachment: Optional[Attachment] = None
+
+class WhatsAppConfig(BaseModel):
+    phone_number_id: str
+    business_account_id: str
+    access_token: str
+    owner_email: Optional[str] = None
 
 # --- Existing Models (Updated for User Ownership) ---
 class Contact(BaseModel):
@@ -44,6 +67,7 @@ class Contact(BaseModel):
     phone: Optional[str] = None
     tags: List[str] = []
     notes: Optional[str] = "" # Added
+    avatar: Optional[str] = None # Added for profile photo
     
     # Chat features merged into Contact for MVP
     unread: int = 0 # Added
@@ -69,6 +93,7 @@ class Campaign(BaseModel):
     # New: Link campaign to a user
     owner_email: Optional[str] = None
 
+
 # Keeping Chat model for potential future separation, but Contact handles it for now
 class Chat(BaseModel):
     id: str
@@ -79,3 +104,6 @@ class Chat(BaseModel):
     avatar: Optional[str] = None
     messages: List[Message] = []
     owner_email: Optional[str] = None
+
+# --- AI Models ---
+

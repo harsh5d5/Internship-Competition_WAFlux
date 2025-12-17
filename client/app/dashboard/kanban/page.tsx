@@ -12,6 +12,7 @@ type Lead = {
     value: string;
     status: string;
     last_contact: string;
+    avatar?: string;
 };
 
 // Column Config
@@ -118,7 +119,21 @@ export default function KanbanPage() {
 
     const [isNavOpen, setIsNavOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingLead, setEditingLead] = useState<Lead | null>(null);
     const [newLead, setNewLead] = useState({ name: "", company: "", value: "", status: "new" });
+
+    // Handle opening edit modal
+    const openEditModal = (lead: Lead) => {
+        setEditingLead(lead);
+        setNewLead({
+            name: lead.name,
+            company: lead.company,
+            value: lead.value,
+            status: lead.status
+        });
+        setIsEditModalOpen(true);
+    };
 
     // ... (fetch logic remains)
 
@@ -149,6 +164,37 @@ export default function KanbanPage() {
         } catch (error) {
             console.error("Error creating lead:", error);
             alert("Failed to create lead. Please try again.");
+        }
+    };
+
+    const handleUpdateLead = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingLead) return;
+        const token = localStorage.getItem("access_token");
+
+        try {
+            const res = await fetch(`http://localhost:8000/api/leads/${editingLead.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    ...editingLead,
+                    ...newLead
+                })
+            });
+
+            if (!res.ok) throw new Error("Failed to update lead");
+
+            const updatedLead = await res.json();
+            setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
+            setIsEditModalOpen(false);
+            setEditingLead(null);
+            setNewLead({ name: "", company: "", value: "", status: "new" });
+        } catch (error) {
+            console.error("Error updating lead:", error);
+            alert("Failed to update lead. Please try again.");
         }
     };
 
@@ -205,13 +251,18 @@ export default function KanbanPage() {
                                         layoutId={lead.id}
                                         draggable
                                         onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent, lead.id)}
+                                        onClick={() => openEditModal(lead)}
                                         whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0, 0, 0, 0.2)" }}
                                         className="p-4 bg-white dark:bg-[#1f2c34] rounded-xl border border-gray-200 dark:border-white/5 cursor-grab active:cursor-grabbing hover:border-[#02C173]/50 transition-all group relative shadow-sm dark:shadow-black/20"
                                     >
                                         <div className="flex justify-between items-start mb-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/5 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
-                                                    {lead.name.charAt(0)}
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/5 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 overflow-hidden">
+                                                    {lead.avatar ? (
+                                                        <img src={lead.avatar} alt={lead.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        lead.name.charAt(0)
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <h4 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#02C173] transition-colors">{lead.name}</h4>
@@ -314,6 +365,88 @@ export default function KanbanPage() {
                                     className="w-full bg-[#02C173] hover:bg-[#02A060] text-white font-bold py-2.5 rounded-lg transition-colors shadow-lg shadow-[#02C173]/20"
                                 >
                                     Create Lead
+                                </button>
+                            </div>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Edit Lead Modal */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-white dark:bg-[#111b21] rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden"
+                    >
+                        <div className="p-6 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Lead</h2>
+                            <button onClick={() => { setIsEditModalOpen(false); setEditingLead(null); }} className="text-gray-400 hover:text-gray-500 dark:hover:text-white">
+                                <Plus className="w-6 h-6 rotate-45" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateLead} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#0b141a] px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#02C173]"
+                                    value={newLead.name}
+                                    onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#0b141a] px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#02C173]"
+                                    value={newLead.company}
+                                    onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Potential Value</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#0b141a] px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#02C173]"
+                                    value={newLead.value}
+                                    onChange={(e) => setNewLead({ ...newLead, value: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                                <select
+                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#0b141a] px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#02C173]"
+                                    value={newLead.status}
+                                    onChange={(e) => setNewLead({ ...newLead, status: e.target.value })}
+                                >
+                                    {columns.map(col => (
+                                        <option key={col.id} value={col.id}>{col.title}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="pt-2 flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        // Delete logic could go here if requested, but for now just cancel
+                                        setIsEditModalOpen(false);
+                                        setEditingLead(null);
+                                    }}
+                                    className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 font-bold py-2.5 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 bg-[#02C173] hover:bg-[#02A060] text-white font-bold py-2.5 rounded-lg transition-colors shadow-lg shadow-[#02C173]/20"
+                                >
+                                    Save Changes
                                 </button>
                             </div>
                         </form>

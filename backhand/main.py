@@ -1,11 +1,16 @@
-from fastapi import FastAPI, HTTPException, Body, Depends, status
+from fastapi import FastAPI, HTTPException, Body, Depends, status, File, UploadFile
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import List, Optional
 import uuid
+import shutil
+import os
 from pydantic import BaseModel
-from datetime import timedelta
 from jose import JWTError, jwt
+from datetime import timedelta
+
+
 
 # Import our new modules
 from database import db
@@ -18,11 +23,16 @@ from auth import (
     ALGORITHM
 )
 from models import (
-    User, UserCreate, UserInDB, Token, TokenData, 
-    Contact, Campaign, Chat, Message
+    User, UserCreate, UserInDB, Token, TokenData, UserUpdate, PasswordUpdate, 
+    Contact, Campaign, Chat, Message, Attachment, WhatsAppConfig
 )
 
 app = FastAPI()
+
+# Mount the uploads directory to serve files
+# Ensure the directory exists
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Enable CORS for the frontend
 app.add_middleware(
@@ -117,6 +127,56 @@ async def create_user(user: UserCreate):
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
+@app.put("/users/me", response_model=User)
+async def update_user(update_data: UserUpdate, current_user: User = Depends(get_current_active_user)):
+    # Prepare update dict
+    updates = {k: v for k, v in update_data.dict().items() if v is not None}
+    
+    if updates:
+        db.users.update_one(
+            {"username": current_user.username},
+            {"$set": updates}
+        )
+        # Update local object to return fresh data
+        for k, v in updates.items():
+            setattr(current_user, k, v)
+            
+    return current_user
+
+@app.put("/users/me/password")
+async def update_password(pass_update: PasswordUpdate, current_user: User = Depends(get_current_active_user)):
+    # 1. Verify current password
+    user_db = db.users.find_one({"username": current_user.username})
+    if not user_db or not verify_password(pass_update.current_password, user_db['hashed_password']):
+         raise HTTPException(status_code=400, detail="Incorrect current password")
+         
+    # 2. Hash new password
+    new_hashed_password = get_password_hash(pass_update.new_password)
+    
+    # 3. Update in DB
+    db.users.update_one(
+        {"username": current_user.username},
+        {"$set": {"hashed_password": new_hashed_password}}
+    )
+    
+    return {"detail": "Password updated successfully"}
+
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_active_user)):
+    file_location = f"uploads/{file.filename}"
+    
+    # Check for duplicate names, maybe append UUID if strictly needed, 
+    # but for simple MVP, just overwriting or using original name is okay.
+    # To be safer let's prepend uuid
+    unique_filename = f"{uuid.uuid4()}_{file.filename}"
+    file_location = f"uploads/{unique_filename}"
+    
+    with open(file_location, "wb+") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # Return the URL relative to the server
+    return {"url": f"http://localhost:8000/uploads/{unique_filename}", "name": file.filename, "type": file.content_type}
+
 # --- Application Routes ---
 
 campaigns_db = []
@@ -132,49 +192,54 @@ def get_leads(current_user: User = Depends(get_current_active_user)):
     
     # Check if we need to seed demo data (if total contacts < 3, just to be safe and helpful)
     # Or specifically check if "Sarah Wilson" is missing.
+    # Check if we need to seed demo data
     existing_names = {c['name'] for c in contacts}
     
     demo_contacts = []
     
-    if "Sarah Wilson" not in existing_names:
+    # 1. Sergio Ramos (was Sarah Wilson)
+    if "Sergio Ramos" not in existing_names and "Sarah Wilson" not in existing_names:
         demo_contacts.append(Contact(
             id=str(uuid.uuid4()),
-            name="Sarah Wilson",
-            company="Global Tech",
-            role="VP Sales",
-            email="sarah@globaltech.com",
-            phone="+1 (555) 010-9988",
+            name="Sergio Ramos",
+            company="Real Madrid",
+            role="Captain",
+            avatar="/avatars/sergio-ramos.jpg",
+            email="sergio@realmadrid.com",
+            phone="+34 666 777 888",
             value="$45,000",
             status="active",
             last_contact="10:30 AM",
-            tags=["vip", "enterprise"],
-            notes="Needs a custom contract by Friday.",
+            tags=["vip", "football"],
+            notes="Needs a new contract.",
             owner_email=current_user.email,
             unread=2,
             messages=[
-                Message(id=str(uuid.uuid4()), sender="them", text="Hi, we are interested in the premium plan.", time="Yesterday", status="read"),
-                Message(id=str(uuid.uuid4()), sender="me", text="Great! I can send you the brochure.", time="Yesterday", status="read"),
-                Message(id=str(uuid.uuid4()), sender="them", text="Please do. Also, is the API included?", time="10:30 AM", status="sent")
+                Message(id=str(uuid.uuid4()), sender="them", text="Hala Madrid!", time="Yesterday", status="read"),
+                Message(id=str(uuid.uuid4()), sender="me", text="Vamos!", time="Yesterday", status="read"),
+                Message(id=str(uuid.uuid4()), sender="them", text="See you at training.", time="10:30 AM", status="sent")
             ]
         ))
 
-    if "Dr. Aisha Gupta" not in existing_names:
+    # 2. Mesut Özil (was Dr. Aisha Gupta)
+    if "Mesut Özil" not in existing_names and "Dr. Aisha Gupta" not in existing_names:
         demo_contacts.append(Contact(
             id=str(uuid.uuid4()),
-            name="Dr. Aisha Gupta",
-            company="City Hospital",
-            role="Chief Surgeon",
-            email="aisha.g@hospital.org",
-            phone="+91 98765 43210",
+            name="Mesut Özil",
+            company="Arsenal",
+            role="Playmaker",
+            avatar="/avatars/mesut-ozil.jpg",
+            email="mesut@arsenal.com",
+            phone="+44 777 888 999",
             value="$0",
-            status="urgent", # diff status
+            status="urgent", 
             last_contact="Just now",
-            tags=["medical", "urgent"],
-            notes="Inquiring about emergency alert features.",
+            tags=["assist-king", "urgent"],
+            notes="Inquiring about transfer.",
             owner_email=current_user.email,
             unread=1,
             messages=[
-                Message(id=str(uuid.uuid4()), sender="them", text="We have a system outage.", time="Just now", status="sent")
+                Message(id=str(uuid.uuid4()), sender="them", text="Ya Gunners Ya!", time="Just now", status="sent")
             ]
         ))
         
@@ -184,6 +249,7 @@ def get_leads(current_user: User = Depends(get_current_active_user)):
             name="Rahul Sharma",
             company="Sharma Real Estate",
             role="Broker",
+            avatar="/avatars/avatar-3.jpg",
             email="rahulse@properties.com",
             phone="+91 8888 2222 11",
             value="$1.2M",
@@ -200,6 +266,49 @@ def get_leads(current_user: User = Depends(get_current_active_user)):
             db.contacts.insert_one(contact.dict())
         # Refresh list
         contacts.extend([c.dict() for c in demo_contacts])
+
+    # --- FIX: Rename old contacts and update avatars ---
+    for contact in contacts:
+        updates = {}
+        
+        # Rename Sarah Wilson -> Sergio Ramos
+        if contact['name'] == "Sarah Wilson":
+            updates["name"] = "Sergio Ramos"
+            updates["company"] = "Real Madrid"
+            updates["role"] = "Captain"
+            updates["avatar"] = "/avatars/sergio-ramos.jpg"
+            contact['name'] = "Sergio Ramos" # Update local for response
+            contact['avatar'] = "/avatars/sergio-ramos.jpg"
+
+        # Rename Dr. Aisha Gupta -> Mesut Özil
+        elif contact['name'] == "Dr. Aisha Gupta":
+            updates["name"] = "Mesut Özil"
+            updates["company"] = "Arsenal"
+            updates["role"] = "Playmaker"
+            updates["avatar"] = "/avatars/mesut-ozil.jpg"
+            contact['name'] = "Mesut Özil"
+            contact['avatar'] = "/avatars/mesut-ozil.jpg"
+            
+        # Ensure correct avatar for existing Sergio Ramos
+        elif contact['name'] == "Sergio Ramos":
+             updates["avatar"] = "/avatars/sergio-ramos.jpg"
+             contact['avatar'] = "/avatars/sergio-ramos.jpg"
+
+        # Ensure correct avatar for existing Mesut Özil
+        elif contact['name'] == "Mesut Özil":
+             updates["avatar"] = "/avatars/mesut-ozil.jpg"
+             contact['avatar'] = "/avatars/mesut-ozil.jpg"
+             
+        # Ensure correct avatar for Rahul
+        elif contact['name'] == "Rahul Sharma":
+             updates["avatar"] = "/avatars/avatar-3.jpg"
+             contact['avatar'] = "/avatars/avatar-3.jpg"
+
+        if updates:
+            db.contacts.update_one(
+                {"id": contact['id']},
+                {"$set": updates}
+            )
 
     return contacts
 
@@ -268,6 +377,42 @@ def update_lead(lead_id: str, lead_update: Contact, current_user: User = Depends
     updated_custom = {**existing, **update_data}
     return Contact(**updated_custom)
 
+@app.get("/api/dashboard/activity")
+async def get_dashboard_activity(current_user: User = Depends(get_current_active_user)):
+    contacts = list(db.contacts.find({"owner_email": current_user.email}))
+    activity_feed = []
+    
+    for contact in contacts:
+        # Get messages reversed (assuming last is new, but list might be append-only)
+        msgs = contact.get("messages", [])
+        
+        # We'll take the last 5 messages from each contact to populate the feed
+        recent_msgs = msgs[-5:] if msgs else []
+        
+        for msg in recent_msgs:
+            # Determine type
+            msg_type = "message"
+            if msg.get("sender") == "them":
+                msg_type = "reply"
+            elif msg.get("status") == "failed":
+                msg_type = "failed"
+            elif msg.get("status") == "read":
+                 msg_type = "read"
+            elif msg.get("sender") == "me":
+                 msg_type = "campaign_sent" # mimicking the existing UI style
+            
+            activity_feed.append({
+                "id": msg.get("id") or str(uuid.uuid4()),
+                "type": msg_type,
+                "user": contact.get("name", "Unknown"),
+                "contact_id": contact.get("id"),
+                "time": msg.get("time", "Recently"),
+                "detail": msg.get("text", "")
+            })
+            
+    # Return top 20 latest (reversed naive)
+    return activity_feed[::-1][:20]
+
 # --- Message Persistence on Leads ---
 
 # --- Mock Bot Logic ---
@@ -276,30 +421,42 @@ import random
 
 async def simulate_reply(lead_id: str, user_message: str, owner_email: str):
     # Simulate typing delay
-    await asyncio.sleep(3)
+    await asyncio.sleep(2)
     
-    # Simple keyword-based logic
-    msg_lower = user_message.lower()
-    reply_text = "Interesting. Tell me more."
+    reply_text = "Thank you for your message. We will get back to you shortly."
     
-    if any(x in msg_lower for x in ["hi", "hello", "hey"]):
-        reply_text = "Hello! Thanks for reaching out. How can I help you today?"
-    elif "price" in msg_lower or "cost" in msg_lower:
-        reply_text = "Our enterprise plan starts at $99/month. Would you like a quote?"
-    elif "demo" in msg_lower:
-        reply_text = "Sure, I'm free tomorrow at 2 PM for a demo. Does that work?"
-    elif "thank" in msg_lower:
-        reply_text = "You're welcome! Let me know if you need anything else."
-    elif "yes" in msg_lower:
-        reply_text = "Great! I'll send the details shortly."
-    else:
+    # Handle attachment or empty text
+    if not user_message or user_message.strip() == "":
         replies = [
-            "Could you clarify that?", 
-            "I see. Let me check with my team.", 
-            "Sounds good.",
-            "Can you send me the PDF?"
+            "Received the file, thank you.",
+            "Thanks for the attachment. I'll review it and get back to you.",
+            "Document received. Give me a moment to look at it."
         ]
         reply_text = random.choice(replies)
+    else:
+        # Simple keyword-based logic (Business Context)
+        msg_lower = user_message.lower()
+        
+        if any(x in msg_lower for x in ["hi", "hello", "hey", "greetings"]):
+            reply_text = "Hello! Thanks for reaching out to WAFlux Business Solutions. How can we assist you today?"
+        elif "price" in msg_lower or "cost" in msg_lower or "quote" in msg_lower:
+            reply_text = "Our premium enterprise plan starts at $499/month. Would you like us to prepare a formal quotation for your team?"
+        elif "demo" in msg_lower or "meeting" in msg_lower or "call" in msg_lower:
+            reply_text = "I'd be happy to schedule a demo. We have availability tomorrow at 10 AM or 2 PM. Which works better for you?"
+        elif "thank" in msg_lower:
+            reply_text = "You're welcome! We look forward to doing business with you."
+        elif "interest" in msg_lower or "buy" in msg_lower:
+            reply_text = "That's great to hear! I can send over the contract and onboarding details right away."
+        elif "document" in msg_lower or "file" in msg_lower or "pdf" in msg_lower:
+            reply_text = "Please send the document over, and our legal team will review it."
+        else:
+            replies = [
+                "Could you provide more specific requirements for your project?",
+                "I'll need to check with our technical team regarding that specific feature.", 
+                "We can certainly accommodate that request. when are you looking to start?",
+                "Is there a good time to call you to discuss this in more detail?"
+            ]
+            reply_text = random.choice(replies)
 
     # Create Message Object
     reply_msg = {
@@ -337,7 +494,7 @@ def send_lead_message(lead_id: str, message: Message, background_tasks: Backgrou
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
     
-    # Prepare message
+    # Prepare message ID if missing
     if not message.id:
         message.id = str(uuid.uuid4())
         
@@ -353,7 +510,9 @@ def send_lead_message(lead_id: str, message: Message, background_tasks: Backgrou
     )
     
     # Trigger Bot Reply in Background
-    background_tasks.add_task(simulate_reply, lead_id, message.text, current_user.email)
+    # Pass message.text explicitly, handle case where text is None (attachment only)
+    user_text = message.text if message.text else ""
+    background_tasks.add_task(simulate_reply, lead_id, user_text, current_user.email)
 
     return message
 
@@ -375,14 +534,43 @@ def get_campaigns(current_user: User = Depends(get_current_active_user)):
 @app.post("/api/campaigns", response_model=Campaign)
 def create_campaign(campaign: Campaign, current_user: User = Depends(get_current_active_user)):
     campaign.owner_email = current_user.email
-    campaign.id = str(uuid.uuid4())
-    campaign.sent = 0
-    campaign.delivered = 0
-    campaign.read = 0
-    campaign.replied = 0
-    campaign.status = "Scheduled"
-    campaigns_db.append(campaign)
+    db.campaigns.insert_one(campaign.dict())
+    campaigns_db.append(campaign) # Keep local sync for now if needed, or remove
     return campaign
+
+# --- WhatsApp Configuration Routes ---
+
+@app.post("/api/config/whatsapp", response_model=WhatsAppConfig)
+def save_whatsapp_config(config: WhatsAppConfig, current_user: User = Depends(get_current_active_user)):
+    config.owner_email = current_user.email
+    
+    # Upsert: Update if exists, Insert if new
+    db.whatsapp_config.update_one(
+        {"owner_email": current_user.email},
+        {"$set": config.dict()},
+        upsert=True
+    )
+    return config
+
+@app.get("/api/config/whatsapp")
+def get_whatsapp_config(current_user: User = Depends(get_current_active_user)):
+    config = db.whatsapp_config.find_one({"owner_email": current_user.email})
+    if not config:
+        return {}
+    
+    # Mask the token for security
+    masked_token = config.get("access_token", "")
+    if len(masked_token) > 10:
+        masked_token = masked_token[:4] + "*" * (len(masked_token) - 8) + masked_token[-4:]
+    else:
+        masked_token = "*" * len(masked_token)
+        
+    return {
+        "phone_number_id": config.get("phone_number_id"),
+        "business_account_id": config.get("business_account_id"),
+        "access_token": masked_token,
+        "is_configured": True
+    }
 
 # --- Legacy Chat Endpoints (Optional/Deprecated if using Leads as Chats) ---
 
@@ -396,5 +584,8 @@ def create_chat(chat: Chat, current_user: User = Depends(get_current_active_user
     chat.owner_email = current_user.email
     if not chat.id:
         chat.id = str(uuid.uuid4())
+
     db.chats.insert_one(chat.dict())
     return chat
+
+
