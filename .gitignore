@@ -39,3 +39,6 @@ venv/
 .venv/
 env/
 .env/
+
+# Uploads
+backhand/uploads/
