@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Send, Clock, BarChart2, Filter, Home, ArrowLeft, X } from "lucide-react";
+import { Plus, Send, Clock, BarChart2, Filter, Home, ArrowLeft, X, Check, Edit, Activity } from "lucide-react";
 import Link from 'next/link';
+import { useRouter } from "next/navigation";
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 
 type Campaign = {
     id: string;
@@ -15,28 +17,114 @@ type Campaign = {
     replied: number;
     scheduled_date: string;
     type: string;
+    audience?: string;
     is_ab_test?: boolean;
+    image_url?: string;
+    template_id?: string;
 };
 
+const TEMPLATES = [
+    {
+        id: "diwali_sale",
+        name: "Diwali Sale",
+        body: "Happy Diwali! 🪔\n\nCelebrate the festival of lights with our exclusive 50% OFF sale on all items.\n\nShop now: https://example.com/diwali",
+        image: "https://example.com/diwali-banner.jpg" // Placeholder
+    },
+    {
+        id: "welcome_msg",
+        name: "Welcome Message",
+        body: "Hello! 👋\n\nWelcome to WAFlux. We are excited to have you on board. Let us know if you have any questions!",
+        image: ""
+    },
+    {
+        id: "payment_reminder",
+        name: "Payment Reminder",
+        body: "Hi there,\n\nThis is a gentle reminder regarding your pending payment of $50. Please clear it by tomorrow to avoid interruptions.\n\nPay here: https://example.com/pay",
+        image: ""
+    }
+];
+
 export default function CampaignsPage() {
+    const router = useRouter();
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [showModal, setShowModal] = useState(false);
+    const [filterStatus, setFilterStatus] = useState("All");
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [stats, setStats] = useState({ total_sent: 0, avg_open_rate: 0, scheduled: 0 });
+
+    // Mock Data for Sparklines
+    const sparklineData = [
+        { value: 10 }, { value: 15 }, { value: 12 }, { value: 20 }, { value: 18 }, { value: 25 }, { value: 22 }
+    ];
+    const sparklineData2 = [
+        { value: 65 }, { value: 68 }, { value: 72 }, { value: 70 }, { value: 75 }, { value: 78 }, { value: 80 }
+    ];
 
     // Form State
     const [formData, setFormData] = useState({
         name: "",
         type: "Marketing",
+        audience: "All Contacts",
         scheduled_date: "",
         is_ab_test: false,
         variant_a_body: "",
         variant_b_body: "",
-        split_ratio: 50
+        split_ratio: 50,
+        image_url: "",
+        template_id: ""
     });
 
+    // Mock Audience Count (Would be fetched from backend in real app)
+    const getAudienceCount = (audienceType: string) => {
+        if (audienceType === 'All Contacts') return 342;
+        if (audienceType === 'VIP') return 24;
+        if (audienceType === 'Leads') return 156;
+        if (audienceType === 'New') return 45;
+        if (audienceType === 'Test Group') return 5;
+        return 0;
+    };
+
+    const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const tId = e.target.value;
+        const template = TEMPLATES.find(t => t.id === tId);
+
+        if (template) {
+            setFormData(prev => ({
+                ...prev,
+                template_id: tId,
+                variant_a_body: template.body,
+                image_url: template.image || prev.image_url // Keep existing if template has none
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, template_id: "" }));
+        }
+    };
+
+
     useEffect(() => {
-        fetch("http://localhost:8000/api/campaigns")
+        // Auth Check
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            router.push("/login?redirect=/campaigns");
+            return;
+        }
+
+        // Fetch Campaigns
+        fetch("http://localhost:8000/api/campaigns", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
             .then(res => {
-                if (!res.ok) throw new Error("Network response was not ok");
+                if (!res.ok) {
+                    console.error("Fetch Error:", res.status, res.statusText);
+                    if (res.status === 401) {
+                        // Token expired
+                        localStorage.removeItem("access_token");
+                        window.location.href = "/login";
+                    }
+                    throw new Error(`Network response was not ok: ${res.status}`);
+                }
                 return res.json();
             })
             .then(data => {
@@ -51,33 +139,98 @@ export default function CampaignsPage() {
                 console.error("Failed to fetch campaigns", err);
                 setCampaigns([]);
             });
+
+        // Fetch Stats
+        fetch("http://localhost:8000/api/campaigns/stats", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
+            .then(res => res.json())
+            .then(data => setStats(data))
+            .catch(err => console.error("Failed to fetch stats", err));
+
     }, []);
 
     const handleCreate = async () => {
         try {
-            const res = await fetch("http://localhost:8000/api/campaigns", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const token = localStorage.getItem("access_token");
+            const method = editingId ? "PUT" : "POST";
+            const url = editingId
+                ? `http://localhost:8000/api/campaigns/${editingId}`
+                : "http://localhost:8000/api/campaigns";
+
+            const res = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify(formData)
             });
+
             if (res.ok) {
-                const newCampaign = await res.json();
-                setCampaigns([...campaigns, newCampaign]);
+                const updatedCampaign = await res.json();
+
+                if (editingId) {
+                    setCampaigns(campaigns.map(c => c.id === editingId ? updatedCampaign : c));
+                } else {
+                    setCampaigns([...campaigns, updatedCampaign]);
+                }
+
                 setShowModal(false);
+                setEditingId(null);
                 // Reset form
                 setFormData({
                     name: "",
                     type: "Marketing",
+                    audience: "All Contacts",
                     scheduled_date: "",
                     is_ab_test: false,
                     variant_a_body: "",
                     variant_b_body: "",
-                    split_ratio: 50
+                    split_ratio: 50,
+                    image_url: "",
+                    template_id: ""
                 });
             }
         } catch (e) {
-            console.error("Failed to create", e);
+            console.error("Failed to save", e);
         }
+    };
+
+    const handleEdit = (campaign: Campaign) => {
+        setEditingId(campaign.id);
+        setFormData({
+            name: campaign.name,
+            type: campaign.type,
+            audience: campaign.audience || "All Contacts",
+            scheduled_date: campaign.scheduled_date,
+            is_ab_test: campaign.is_ab_test || false,
+            variant_a_body: "", // We might need to fetch details if not in list, but assuming basic update for now
+            variant_b_body: "",
+            split_ratio: 50,
+            image_url: campaign.image_url || "",
+            template_id: campaign.template_id || ""
+        });
+        setShowModal(true);
+    };
+
+    const openCreateModal = () => {
+        setEditingId(null);
+        setFormData({
+            name: "",
+            type: "Marketing",
+            audience: "All Contacts",
+            scheduled_date: "",
+            is_ab_test: false,
+            variant_a_body: "",
+            variant_b_body: "",
+            split_ratio: 50,
+            image_url: "",
+            template_id: ""
+        });
+        setShowModal(true);
     };
     return (
         <div className="min-h-screen bg-white dark:bg-[#060707] p-8 md:p-12 transition-colors duration-300">
@@ -92,7 +245,7 @@ export default function CampaignsPage() {
                         <p className="text-sm text-gray-500 dark:text-gray-400">Create, schedule, and track your WhatsApp broadcasts.</p>
                     </div>
                     <button
-                        onClick={() => setShowModal(true)}
+                        onClick={openCreateModal}
                         className="flex items-center gap-2 bg-[#02C173] hover:bg-[#02A060] text-black font-semibold px-4 py-2 rounded-lg transition-colors shadow-[0_0_15px_rgba(2,193,115,0.3)]"
                     >
                         <Plus className="w-4 h-4" />
@@ -102,36 +255,80 @@ export default function CampaignsPage() {
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 p-5 rounded-xl shadow-sm dark:shadow-none transition-colors">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><Send size={20} /></div>
-                            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Sent</h3>
+                    <div className="relative overflow-hidden bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 p-5 rounded-xl shadow-sm dark:shadow-none transition-all group hover:border-[#02C173]/30">
+                        {/* Glow Effect */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><Send size={20} /></div>
+                                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Sent</h3>
+                            </div>
+                            <div className="flex justify-between items-end">
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_sent.toLocaleString()}</p>
+                                <div className="h-10 w-24">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={sparklineData}>
+                                            <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">12,543</p>
                     </div>
-                    <div className="bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 p-5 rounded-xl shadow-sm dark:shadow-none transition-colors">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-[#02C173]/10 rounded-lg text-[#02C173]"><BarChart2 size={20} /></div>
-                            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Avg Open Rate</h3>
+                    <div className="relative overflow-hidden bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 p-5 rounded-xl shadow-sm dark:shadow-none transition-all group hover:border-[#02C173]/30">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#02C173]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-[#02C173]/10 rounded-lg text-[#02C173]"><BarChart2 size={20} /></div>
+                                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Avg Open Rate</h3>
+                            </div>
+                            <div className="flex justify-between items-end">
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.avg_open_rate}%</p>
+                                <div className="h-10 w-24">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={sparklineData2}>
+                                            <Line type="monotone" dataKey="value" stroke="#02C173" strokeWidth={2} dot={false} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">78.4%</p>
                     </div>
-                    <div className="bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 p-5 rounded-xl shadow-sm dark:shadow-none transition-colors">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500"><Clock size={20} /></div>
-                            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Scheduled</h3>
+                    <div className="relative overflow-hidden bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 p-5 rounded-xl shadow-sm dark:shadow-none transition-all group hover:border-[#02C173]/30">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500"><Clock size={20} /></div>
+                                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Scheduled</h3>
+                            </div>
+                            <div className="flex justify-between items-end">
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.scheduled}</p>
+                            </div>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">3</p>
                     </div>
                 </div>
 
                 {/* Campaigns List */}
                 <div className="bg-white dark:bg-[#0b141a] border border-gray-200 dark:border-white/5 rounded-xl overflow-hidden shadow-sm dark:shadow-none transition-colors">
-                    <div className="p-4 border-b border-gray-200 dark:border-white/5 flex items-center justify-between">
+                    <div className="p-4 border-b border-gray-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <h3 className="font-semibold text-gray-900 dark:text-white">All Campaigns</h3>
-                        <button className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white flex items-center gap-1 text-sm">
-                            <Filter size={14} /> Filter
-                        </button>
+
+                        {/* Status Filter Tabs */}
+                        <div className="flex p-1 bg-gray-100 dark:bg-white/5 rounded-lg">
+                            {['All', 'Active', 'Scheduled', 'Completed'].map((status) => (
+                                <button
+                                    key={status}
+                                    onClick={() => setFilterStatus(status)}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filterStatus === status
+                                        ? 'bg-white dark:bg-[#0b141a] text-[#02C173] shadow-sm'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'
+                                        }`}
+                                >
+                                    {status}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -144,48 +341,77 @@ export default function CampaignsPage() {
                                     <th className="p-4 text-center">Read</th>
                                     <th className="p-4 text-center">Replied</th>
                                     <th className="p-4">Date</th>
+                                    <th className="p-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-white/5 text-sm">
-                                {campaigns.map((camp) => (
-                                    <motion.tr
-                                        key={camp.id}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        whileHover={{ backgroundColor: "rgba(100,100,100,0.05)" }}
-                                        className="group cursor-pointer text-gray-600 dark:text-gray-300"
-                                    >
-                                        <td className="p-4">
-                                            <p className="font-medium text-gray-900 dark:text-white group-hover:text-[#02C173] transition-colors">{camp.name}</p>
-                                            <span className="text-xs text-gray-500">{camp.type}</span>
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium border
-                             ${camp.status === 'Completed' ? 'bg-[#02C173]/10 text-[#029a5b] dark:text-[#02C173] border-[#02C173]/20' :
-                                                    camp.status === 'Scheduled' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-500 border-blue-500/20' :
-                                                        camp.status === 'Active' ? 'bg-purple-500/10 text-purple-600 dark:text-purple-500 border-purple-500/20' :
-                                                            'bg-gray-500/10 text-gray-500 dark:text-gray-400 border-gray-500/20'
-                                                }`}>
-                                                {camp.status}
-                                            </span>
-                                        </td>
-                                        <td className="p-4">
-                                            {camp.sent > 0 ? camp.sent.toLocaleString() : '-'}
-                                        </td>
-                                        <td className="p-4 text-center">
-                                            {camp.delivered > 0 ? ((camp.delivered / camp.sent) * 100).toFixed(1) + '%' : '-'}
-                                        </td>
-                                        <td className="p-4 text-center">
-                                            {camp.read > 0 ? ((camp.read / camp.sent) * 100).toFixed(1) + '%' : '-'}
-                                        </td>
-                                        <td className="p-4 text-center">
-                                            {camp.replied > 0 ? ((camp.replied / camp.sent) * 100).toFixed(1) + '%' : '-'}
-                                        </td>
-                                        <td className="p-4 text-gray-500 dark:text-gray-500">
-                                            {camp.scheduled_date}
-                                        </td>
-                                    </motion.tr>
-                                ))}
+                                {campaigns
+                                    .filter(c => filterStatus === 'All' || c.status === filterStatus)
+                                    .map((camp) => (
+                                        <motion.tr
+                                            key={camp.id}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            whileHover={{ backgroundColor: "rgba(100,100,100,0.05)" }}
+                                            className="group cursor-pointer text-gray-600 dark:text-gray-300"
+                                        >
+                                            <td className="p-4">
+                                                <p className="font-medium text-gray-900 dark:text-white group-hover:text-[#02C173] transition-colors">{camp.name}</p>
+                                                <span className="text-xs text-gray-500">{camp.type}</span>
+                                            </td>
+                                            <td className="p-4">
+                                                {camp.status === 'Completed' && (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#02C173]/10 text-[#02C173] border border-[#02C173]/20">
+                                                        <Check size={10} className="stroke-[3]" /> Completed
+                                                    </span>
+                                                )}
+                                                {camp.status === 'Scheduled' && (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                                                        <Clock size={10} className="stroke-[3]" /> Scheduled
+                                                    </span>
+                                                )}
+                                                {camp.status === 'Active' && (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                                                        <Activity size={10} className="stroke-[3]" /> Active
+                                                    </span>
+                                                )}
+                                                {!['Completed', 'Scheduled', 'Active'].includes(camp.status) && (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-500/10 text-gray-500 border border-gray-500/20">
+                                                        <Edit size={10} className="stroke-[3]" /> {camp.status}
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded-md">
+                                                    {camp.audience || 'All'}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                {camp.sent > 0 ? camp.sent.toLocaleString() : '-'}
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                {camp.delivered > 0 ? ((camp.delivered / camp.sent) * 100).toFixed(1) + '%' : '-'}
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                {camp.read > 0 ? ((camp.read / camp.sent) * 100).toFixed(1) + '%' : '-'}
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                {camp.replied > 0 ? ((camp.replied / camp.sent) * 100).toFixed(1) + '%' : '-'}
+                                            </td>
+                                            <td className="p-4 text-gray-500 dark:text-gray-500">
+                                                {camp.scheduled_date}
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleEdit(camp); }}
+                                                    className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                                                    title="Edit Campaign"
+                                                >
+                                                    <Edit size={16} />
+                                                </button>
+                                            </td>
+                                        </motion.tr>
+                                    ))}
                             </tbody>
                         </table>
                     </div>
@@ -203,7 +429,7 @@ export default function CampaignsPage() {
                             className="bg-white dark:bg-[#0b141a] w-full max-w-2xl rounded-2xl border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden transition-colors"
                         >
                             <div className="p-6 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-[#111b21] transition-colors">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Campaign</h2>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{editingId ? 'Edit Campaign' : 'Create New Campaign'}</h2>
                                 <button onClick={() => setShowModal(false)} className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"><X size={24} /></button>
                             </div>
 
@@ -231,6 +457,20 @@ export default function CampaignsPage() {
                                             <option value="Automation">Automation</option>
                                         </select>
                                     </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-400">Audience</label>
+                                        <select
+                                            value={formData.audience}
+                                            onChange={(e) => setFormData({ ...formData, audience: e.target.value })}
+                                            className="w-full bg-gray-50 dark:bg-[#1f2c34] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-[#02C173] outline-none"
+                                        >
+                                            <option value="All Contacts">All Contacts</option>
+                                            <option value="VIP">VIP</option>
+                                            <option value="Leads">Leads</option>
+                                            <option value="New">New</option>
+                                            <option value="Test Group">Test Group</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">
@@ -241,6 +481,33 @@ export default function CampaignsPage() {
                                         onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
                                         className="w-full bg-gray-50 dark:bg-[#1f2c34] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-[#02C173] outline-none hover:[color-scheme:light] dark:hover:[color-scheme:dark]"
                                     />
+                                </div>
+
+                                {/* Template & Image Section */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 dark:bg-[#1f2c34]/30 p-4 rounded-xl border border-gray-200 dark:border-white/5">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-400">Load Template</label>
+                                        <select
+                                            value={formData.template_id}
+                                            onChange={handleTemplateChange}
+                                            className="w-full bg-white dark:bg-[#0b141a] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-[#02C173] outline-none"
+                                        >
+                                            <option value="">-- Select Template --</option>
+                                            {TEMPLATES.map(t => (
+                                                <option key={t.id} value={t.id}>{t.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-400">Image URL</label>
+                                        <input
+                                            type="text"
+                                            value={formData.image_url}
+                                            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                                            placeholder="https://..."
+                                            className="w-full bg-white dark:bg-[#0b141a] border border-gray-300 dark:border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-[#02C173] outline-none"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* A/B Testing Toggle */}
@@ -317,14 +584,15 @@ export default function CampaignsPage() {
 
                             <div className="p-6 border-t border-gray-200 dark:border-white/10 flex justify-end gap-3 bg-gray-50 dark:bg-[#111b21] transition-colors">
                                 <button onClick={() => setShowModal(false)} className="px-5 py-2 text-gray-600 dark:text-gray-400 font-medium hover:text-black dark:hover:text-white transition-colors">Cancel</button>
-                                <button onClick={handleCreate} className="px-6 py-2 bg-[#02C173] text-black font-bold rounded-lg hover:bg-[#02a965] shadow-lg shadow-[#02C173]/20 transition-all">
-                                    {formData.is_ab_test ? 'Schedule A/B Test' : 'Schedule Campaign'}
+                                <button onClick={handleCreate} className="px-6 py-2 bg-[#02C173] text-black font-bold rounded-lg hover:bg-[#02a965] shadow-lg shadow-[#02C173]/20 transition-all flex items-center gap-2">
+                                    <span>{editingId ? 'Update Campaign' : (formData.is_ab_test ? 'Schedule A/B Test' : 'Send Campaign')}</span>
+                                    {!editingId && <span className="text-xs bg-black/10 px-2 py-0.5 rounded-full">to ~{getAudienceCount(formData.audience)} users</span>}
                                 </button>
                             </div>
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 }

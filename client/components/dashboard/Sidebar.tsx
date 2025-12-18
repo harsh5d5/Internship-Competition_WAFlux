@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, Home, Trello, Workflow, Sparkles, Palette, HelpCircle, ChevronUp } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, Home, Trello, Workflow, Sparkles, Palette, HelpCircle, ChevronUp, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -17,6 +17,7 @@ const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "CRM Board", href: "/dashboard/kanban", icon: Trello },
     { name: "Automation", href: "/automation", icon: Workflow },
+
     { name: "Contacts", href: "/dashboard/contacts", icon: Users },
     { name: "Chats", href: "/dashboard/chats", icon: MessageSquare },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },

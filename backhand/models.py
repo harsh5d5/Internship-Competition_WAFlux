@@ -64,6 +64,7 @@ class Contact(BaseModel):
     value: str 
     status: str
     last_contact: str
+    updated_at: float = 0.0 # Timestamp for sorting
     phone: Optional[str] = None
     tags: List[str] = []
     notes: Optional[str] = "" # Added
@@ -81,6 +82,7 @@ class Campaign(BaseModel):
     name: str
     status: str = "Scheduled"
     type: str 
+    audience: Optional[str] = "All Contacts"
     scheduled_date: str
     is_ab_test: bool = False
     variant_a_body: Optional[str] = None
@@ -92,6 +94,8 @@ class Campaign(BaseModel):
     replied: int = 0
     # New: Link campaign to a user
     owner_email: Optional[str] = None
+    image_url: Optional[str] = None  # URL for campaign image
+    template_id: Optional[str] = None # ID of selected template
 
 
 # Keeping Chat model for potential future separation, but Contact handles it for now

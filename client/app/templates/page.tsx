@@ -2,7 +2,10 @@
 
 import { motion } from "framer-motion";
 import { Copy, Plus, MoreVertical, Edit, Search, Home, ArrowLeft } from "lucide-react";
+
 import Link from 'next/link';
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 // Mock Template Data
 const templates = [
@@ -45,6 +48,15 @@ const templates = [
 ];
 
 export default function TemplatesPage() {
+    const router = useRouter();
+
+    useEffect(() => {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            router.push("/login?redirect=/templates");
+        }
+    }, [router]);
+
     return (
         <div className="min-h-screen bg-white dark:bg-[#060707] p-8 md:p-12 transition-colors duration-300">
             <div className="max-w-7xl mx-auto space-y-8">

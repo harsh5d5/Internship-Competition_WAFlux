@@ -143,20 +143,20 @@ export default function ChatsPage() {
             avatar: "https://i.pravatar.cc/150?u=me"
         };
 
-        // Optimistic UI update
-        const updatedChats = chats.map(chat => {
-            if (chat.id === selectedChatId) {
-                return {
-                    ...chat,
-                    messages: [...chat.messages, newMessage],
-                    lastMessage: inputMessage,
-                    time: newMessage.time
-                };
-            }
-            return chat;
-        });
+        // Optimistic UI update - Move to top
+        const activeChat = chats.find(c => c.id === selectedChatId);
+        if (activeChat) {
+            const updatedChat = {
+                ...activeChat,
+                messages: [...activeChat.messages, newMessage],
+                lastMessage: inputMessage,
+                time: newMessage.time
+            };
 
-        setChats(updatedChats);
+            const otherChats = chats.filter(c => c.id !== selectedChatId);
+            setChats([updatedChat, ...otherChats]);
+        }
+
         setInputMessage("");
 
         // Sync with backend
@@ -214,20 +214,19 @@ export default function ChatsPage() {
                 }
             };
 
-            // Optimistic UI update
-            const updatedChats = chats.map(chat => {
-                if (chat.id === selectedChatId) {
-                    return {
-                        ...chat,
-                        messages: [...chat.messages, newMessage],
-                        lastMessage: "📎 Attachment",
-                        lastMessageTime: newMessage.time
-                    };
-                }
-                return chat;
-            });
+            // Optimistic UI update - Move to top
+            const activeChat = chats.find(c => c.id === selectedChatId);
+            if (activeChat) {
+                const updatedChat = {
+                    ...activeChat,
+                    messages: [...activeChat.messages, newMessage],
+                    lastMessage: "📎 Attachment",
+                    lastMessageTime: newMessage.time
+                };
 
-            setChats(updatedChats);
+                const otherChats = chats.filter(c => c.id !== selectedChatId);
+                setChats([updatedChat, ...otherChats]);
+            }
             setShowAttachments(false);
 
             // Sync with backend

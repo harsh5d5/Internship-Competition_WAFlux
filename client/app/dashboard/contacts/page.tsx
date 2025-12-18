@@ -23,6 +23,7 @@ export default function ContactsPage() {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [isLoading, setIsLoading] = useState(true);
+    const [imageErrorIds, setImageErrorIds] = useState<Set<string>>(new Set());
 
     // Modals & Popups
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -285,11 +286,12 @@ export default function ContactsPage() {
                                 >
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
                                         <div className="flex items-center gap-3">
-                                            {person.avatar ? (
+                                            {person.avatar && !imageErrorIds.has(person.id) ? (
                                                 <img
                                                     src={person.avatar}
                                                     alt={person.name}
                                                     className="h-9 w-9 rounded-full object-cover"
+                                                    onError={() => setImageErrorIds(prev => new Set(prev).add(person.id))}
                                                 />
                                             ) : (
                                                 <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${getAvatarColor(person.name)}`}>
