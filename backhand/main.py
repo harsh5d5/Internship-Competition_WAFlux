@@ -24,7 +24,7 @@ from auth import (
 )
 from models import (
     User, UserCreate, UserInDB, Token, TokenData, UserUpdate, PasswordUpdate, 
-    Contact, Campaign, Chat, Message, Attachment, WhatsAppConfig
+    Contact, Campaign, Chat, Message, Attachment, WhatsAppConfig, Template
 )
 
 app = FastAPI()
@@ -707,6 +707,88 @@ def update_campaign(campaign_id: str, campaign_update: Campaign, current_user: U
     
     # Return updated campaign
     return {**existing_campaign, **update_data}
+
+# --- Message Template Routes ---
+
+@app.get("/api/templates", response_model=List[Template])
+def get_templates(current_user: User = Depends(get_current_active_user)):
+    templates_cursor = db.templates.find({"owner_email": current_user.email})
+    templates = list(templates_cursor)
+    
+    # Seed demo data if none exists
+    if not templates:
+        demo_templates = [
+            Template(
+                id=str(uuid.uuid4()),
+                name="welcome_offer_2024",
+                category="Marketing",
+                language="en_US",
+                status="Approved",
+                body="Hi {{1}}, welcome to WAFlux! 🚀 Here is an exclusive 20% off coupon for your first month: {{2}}. Expires in 24h.",
+                last_updated="2 days ago",
+                usage=2400,
+                owner_email=current_user.email
+            ),
+            Template(
+                id=str(uuid.uuid4()),
+                name="order_confirmation",
+                category="Utility",
+                language="en_US",
+                status="Approved",
+                body="Hello {{1}}, your order #{{2}} has been confirmed. We will notify you when it ships. Thanks for shopping with us! 📦",
+                last_updated="1 week ago",
+                usage=15200,
+                owner_email=current_user.email
+            ),
+             Template(
+                id=str(uuid.uuid4()),
+                name="appointment_reminder",
+                category="Utility",
+                language="en_US",
+                status="Pending",
+                body="Hi {{1}}, this is a reminder for your appointment on {{2}} at {{3}}. Please reply YES to confirm.",
+                last_updated="5 hours ago",
+                usage=0,
+                owner_email=current_user.email
+            )
+        ]
+        for t in demo_templates:
+            db.templates.insert_one(t.dict())
+        return demo_templates
+        
+    return templates
+
+@app.post("/api/templates", response_model=Template)
+def create_template(template: Template, current_user: User = Depends(get_current_active_user)):
+    template.owner_email = current_user.email
+    if not template.id:
+        template.id = str(uuid.uuid4())
+    template.last_updated = "Just now"
+    
+    db.templates.insert_one(template.dict())
+    return template
+
+@app.put("/api/templates/{template_id}", response_model=Template)
+def update_template(template_id: str, template_update: Template, current_user: User = Depends(get_current_active_user)):
+    existing = db.templates.find_one({"id": template_id, "owner_email": current_user.email})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Template not found")
+        
+    update_data = template_update.dict(exclude={"id", "owner_email"}, exclude_unset=True)
+    update_data["last_updated"] = "Just now"
+    
+    db.templates.update_one(
+        {"id": template_id},
+        {"$set": update_data}
+    )
+    return {**existing, **update_data}
+
+@app.delete("/api/templates/{template_id}")
+def delete_template(template_id: str, current_user: User = Depends(get_current_active_user)):
+    result = db.templates.delete_one({"id": template_id, "owner_email": current_user.email})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return {"status": "success"}
 
 # --- WhatsApp Configuration Routes ---
 

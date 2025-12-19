@@ -111,3 +111,15 @@ class Chat(BaseModel):
 
 # --- AI Models ---
 
+
+class Template(BaseModel):
+    id: Optional[str] = None
+    name: str
+    category: str # Marketing, Utility, Authentication
+    language: str # en_US, etc.
+    status: str = "Pending" # Approved, Pending, Rejected
+    body: str
+    last_updated: Optional[str] = None
+    usage: int = 0
+    owner_email: Optional[str] = None
+
