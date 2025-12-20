@@ -41,28 +41,35 @@ export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const [name, setName] = useState("");
 
     // Remove old cookie logic (replaced by Token Check)
     // useEffect(() => { ... }) 
 
-    const handleLogin = async () => {
+    const handleLogin = async (e?: React.FormEvent, signupEmail?: string, signupPassword?: string) => {
+        if (e) e.preventDefault();
         setError("");
+        setLoading(true);
+
+        const loginEmail = signupEmail || email;
+        const loginPassword = signupPassword || password;
 
         // Email Validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            setError("Please enter the correct email");
+        if (!emailRegex.test(loginEmail)) {
+            setError("Please enter a valid email address");
+            setLoading(false);
             return;
         }
 
         try {
             const formData = new FormData();
-            formData.append('username', email); // backend expects 'username' for OAuth2
-            formData.append('password', password);
+            formData.append('username', loginEmail);
+            formData.append('password', loginPassword);
 
-            const res = await fetch('http://localhost:8000/token', {
+            const res = await fetch('http://127.0.0.1:8000/token', {
                 method: 'POST',
                 body: formData,
             });
@@ -78,21 +85,26 @@ export default function LoginPage() {
             router.push("/dashboard");
         } catch (err: any) {
             setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleSignup = async () => {
+    const handleSignup = async (e: React.FormEvent) => {
+        e.preventDefault();
         setError("");
+        setLoading(true);
 
         // Email Validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            setError("Please enter the correct email");
+            setError("Please enter a valid email address");
+            setLoading(false);
             return;
         }
 
         try {
-            const res = await fetch('http://localhost:8000/signup', {
+            const res = await fetch('http://127.0.0.1:8000/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -107,11 +119,11 @@ export default function LoginPage() {
                 throw new Error(data.detail || 'Signup failed');
             }
 
-            // After signup, switch to login or auto-login
-            alert("Account created! Please sign in.");
-            setIsLogin(true);
+            // After signup, auto-login
+            await handleLogin(undefined, email, password);
         } catch (err: any) {
             setError(err.message);
+            setLoading(false);
         }
     };
 
@@ -177,8 +189,8 @@ export default function LoginPage() {
                 >
                     <div className="pointer-events-auto p-8">
                         <motion.div className="flex items-center gap-4 mb-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                            <div className="w-12 h-12 bg-[#02C173] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-[#02C173]/20">WF</div>
-                            <h1 className="text-4xl font-bold font-sans text-white">WAFlux<span className="text-[#02C173]">.</span></h1>
+                            <div className="w-12 h-12 bg-[#02C173] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-[#02C173]/20">WB</div>
+                            <h1 className="text-4xl font-bold font-sans text-white">WBIZZ<span className="text-[#02C173]">.</span></h1>
                         </motion.div>
 
                         <h2 className="text-3xl font-bold mb-4 text-white">Welcome Back!</h2>
@@ -217,8 +229,8 @@ export default function LoginPage() {
                 >
                     <div className="pointer-events-auto w-full p-8 flex flex-col items-end">
                         <motion.div className="flex items-center gap-4 mb-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                            <h1 className="text-4xl font-bold font-sans text-white">WAFlux<span className="text-[#02C173]">.</span></h1>
-                            <div className="w-12 h-12 bg-[#02C173] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-[#02C173]/20">WF</div>
+                            <h1 className="text-4xl font-bold font-sans text-white">WBIZZ<span className="text-[#02C173]">.</span></h1>
+                            <div className="w-12 h-12 bg-[#02C173] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-[#02C173]/20">WB</div>
                         </motion.div>
 
                         <h2 className="text-3xl font-bold mb-4 text-white">Join the Revolution!</h2>
@@ -264,42 +276,54 @@ export default function LoginPage() {
                                 <div className="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:border-[#02C173] hover:text-[#02C173] cursor-pointer transition-colors bg-[#0b141a]"><Lock size={18} /></div>
                             </div>
 
-                            <div className="relative mb-4 group">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Email"
-                                    className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
-                                />
-                            </div>
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                <div className="relative group">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="Email"
+                                        className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
+                                        required
+                                    />
+                                </div>
 
-                            <div className="relative mb-6 group">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Password"
-                                    className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
-                                />
-                            </div>
+                                <div className="relative group">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="Password"
+                                        className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
+                                        required
+                                    />
+                                </div>
 
-                            {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+                                {error && <p className="text-red-500 text-xs text-center font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20">{error}</p>}
 
-                            <div className="text-right mb-6">
-                                <a href="#" className="text-xs text-gray-400 hover:text-[#02C173] transition-colors">Forgot your password?</a>
-                            </div>
+                                <div className="text-right">
+                                    <a href="#" className="text-xs text-gray-400 hover:text-[#02C173] transition-colors">Forgot your password?</a>
+                                </div>
 
-                            <motion.button
-                                onClick={handleLogin}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="w-full py-3 bg-[#02C173] hover:bg-[#029a5b] text-[#060707] font-bold rounded-lg shadow-[0_0_20px_rgba(2,193,115,0.3)] transition-all flex items-center justify-center gap-2"
-                            >
-                                Sign In
-                            </motion.button>
+                                <motion.button
+                                    type="submit"
+                                    disabled={loading}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full py-3 bg-[#02C173] hover:bg-[#029a5b] text-[#060707] font-bold rounded-lg shadow-[0_0_20px_rgba(2,193,115,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? (
+                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#060707] border-t-transparent" />
+                                    ) : (
+                                        <>
+                                            <LogIn size={18} />
+                                            Sign In
+                                        </>
+                                    )}
+                                </motion.button>
+                            </form>
                         </motion.div>
                     )}
 
@@ -314,49 +338,63 @@ export default function LoginPage() {
                             className="absolute left-0 top-0 w-[52%] h-full flex flex-col justify-center px-16 bg-[#060707] z-20"
                             style={{ clipPath: 'polygon(0 0, 90% 0, 100% 100%, 0% 100%)' }}
                         >
-                            <h2 className="text-3xl font-bold mb-8 text-white">Register</h2>
+                            <form onSubmit={handleSignup} className="space-y-4">
+                                <div className="relative group">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
+                                    <input
+                                        type="text"
+                                        placeholder="Full Name"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
+                                        required
+                                    />
+                                </div>
 
-                            <div className="relative mb-4 group">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
-                                <input
-                                    type="text"
-                                    placeholder="Username"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
-                                />
-                            </div>
+                                <div className="relative group">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
+                                    <input
+                                        type="email"
+                                        placeholder="Email Address"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
+                                        required
+                                    />
+                                </div>
 
-                            <div className="relative mb-4 group">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
-                                <input
-                                    type="email"
-                                    placeholder="Email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
-                                />
-                            </div>
+                                <div className="relative group">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
+                                    <input
+                                        type="password"
+                                        placeholder="Create Password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
+                                        required
+                                        minLength={6}
+                                    />
+                                </div>
 
-                            <div className="relative mb-6 group">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-[#02C173] transition-colors" />
-                                <input
-                                    type="password"
-                                    placeholder="Password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-[#0b141a] border border-white/5 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#02C173] transition-all"
-                                />
-                            </div>
+                                {error && <p className="text-red-500 text-xs text-center font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20">{error}</p>}
 
-                            <motion.button
-                                onClick={handleSignup}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="w-full py-3 bg-[#02C173] hover:bg-[#029a5b] text-[#060707] font-bold rounded-lg shadow-[0_0_20px_rgba(2,193,115,0.3)] transition-all flex items-center justify-center gap-2"
-                            >
-                                Register
-                            </motion.button>
+                                <motion.button
+                                    type="submit"
+                                    disabled={loading}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full py-3 bg-[#02C173] hover:bg-[#029a5b] text-[#060707] font-bold rounded-lg shadow-[0_0_20px_rgba(2,193,115,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? (
+                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#060707] border-t-transparent" />
+                                    ) : (
+                                        <>
+                                            <UserPlus size={18} />
+                                            Create Account
+                                        </>
+                                    )}
+                                </motion.button>
+                            </form>
 
                             <div className="mt-4 text-center">
                                 <p className="text-xs text-gray-500">

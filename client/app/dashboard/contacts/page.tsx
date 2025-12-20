@@ -64,7 +64,7 @@ export default function ContactsPage() {
         const fetchContacts = async () => {
             const token = localStorage.getItem("access_token");
             try {
-                const res = await fetch("http://localhost:8000/api/leads", {
+                const res = await fetch("http://127.0.0.1:8000/api/leads", {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -97,8 +97,8 @@ export default function ContactsPage() {
         };
 
         const url = isEditing && editingId
-            ? `http://localhost:8000/api/leads/${editingId}`
-            : "http://localhost:8000/api/leads";
+            ? `http://127.0.0.1:8000/api/leads/${editingId}`
+            : "http://127.0.0.1:8000/api/leads";
         const method = isEditing ? "PUT" : "POST";
 
         try {
@@ -134,7 +134,7 @@ export default function ContactsPage() {
 
         try {
             const token = localStorage.getItem("access_token");
-            const res = await fetch(`http://localhost:8000/api/leads/${id}`, {
+            const res = await fetch(`http://127.0.0.1:8000/api/leads/${id}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });

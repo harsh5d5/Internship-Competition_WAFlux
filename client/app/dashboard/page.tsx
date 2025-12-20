@@ -74,7 +74,7 @@ export default function DashboardPage() {
             if (!token) return;
 
             try {
-                const res = await fetch("http://localhost:8000/api/dashboard/activity", {
+                const res = await fetch("http://127.0.0.1:8000/api/dashboard/activity", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -183,11 +183,11 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* 1. Live Activity Feed (Span 1) */}
-                <div className="overflow-hidden rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 h-full transition-colors flex flex-col">
+                <div className="overflow-hidden rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 h-fit transition-colors flex flex-col">
                     <div className="p-6 pb-2">
                         <h3 className="text-base font-semibold leading-6 text-gray-900 dark:text-white">Live Activity Feed</h3>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-6 pt-2">
+                    <div className="flex-1 overflow-y-auto p-6 pt-2 custom-scrollbar max-h-[520px]">
                         <div className="flow-root">
                             <ul role="list" className="-mb-8">
                                 {activity.map((event, eventIdx) => (
@@ -212,8 +212,8 @@ export default function DashboardPage() {
                                                                 <span className="font-medium text-gray-900 dark:text-white hover:underline decoration-[#02C173]">{event.user}</span>
                                                                 <span className="ml-1 opacity-80">{event.type.replace('_', ' ')}</span>
                                                             </div>
-                                                            <div className="whitespace-nowrap text-right text-xs text-gray-400 dark:text-gray-500 tabular-nums">
-                                                                {event.time}
+                                                            <div className="whitespace-nowrap text-right text-[11px] font-medium text-gray-400 dark:text-gray-500 tabular-nums">
+                                                                {event.time === "Just now" ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : event.time}
                                                             </div>
                                                         </div>
 
@@ -383,9 +383,9 @@ export default function DashboardPage() {
                                     <Bar
                                         dataKey="rate"
                                         fill="url(#colorBar)"
-                                        radius={[10, 10, 0, 0]}
+                                        radius={10}
                                         barSize={32}
-                                        background={{ fill: 'currentColor', opacity: 0.05, radius: [10, 10, 0, 0] }}
+                                        background={{ fill: 'currentColor', opacity: 0.05, radius: 10 }}
                                         animationDuration={1500}
                                         animationBegin={300}
                                         animationEasing="ease-out"
@@ -397,6 +397,6 @@ export default function DashboardPage() {
 
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

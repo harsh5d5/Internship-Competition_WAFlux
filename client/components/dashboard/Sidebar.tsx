@@ -84,7 +84,7 @@ export function Sidebar() {
             {/* Logo */}
             <div className="flex h-16 items-center border-b border-gray-200 dark:border-[#1f2937] px-6 transition-colors">
                 <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-[#02C173]">
-                    <span>WAFlux</span>
+                    <span>WBIZZ</span>
                 </div>
             </div>
 

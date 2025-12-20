@@ -36,10 +36,10 @@ export default function HeroSection() {
           {/* Logo */}
           <div className="flex items-center gap-3 cursor-pointer hover:scale-105 transition-transform">
             <div className="w-10 h-10 bg-[#02C173] rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-[#02C173]/20">
-              WF
+              WB
             </div>
             <div className="text-2xl font-bold font-sans text-black dark:text-white transition-colors">
-              WAFlux<span className="text-[#02C173]">.</span>
+              WBIZZ<span className="text-[#02C173]">.</span>
             </div>
           </div>
 
@@ -78,7 +78,7 @@ export default function HeroSection() {
         {/* Text Content */}
         <div className="max-w-xl relative mt-10 md:mt-0 z-10 animate-fade-in-up">
           <h1 className="font-bold text-5xl md:text-7xl text-left uppercase text-black dark:text-white leading-tight tracking-tight transition-colors">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#02C173] to-[#128C7E]">WAFlux</span>
+            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#02C173] to-[#128C7E]">WBIZZ</span>
           </h1>
           <p className="font-normal text-left text-gray-600 dark:text-gray-400 mt-6 text-lg leading-relaxed transition-colors">
             Manage your WhatsApp Business communications with a premium, high-performance dashboard.
@@ -122,7 +122,7 @@ export default function HeroSection() {
               <div className="bg-[#1f2c34] p-4 border-b border-white/5 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#02C173] to-[#128C7E] flex items-center justify-center text-white font-bold text-lg">W</div>
                 <div>
-                  <h3 className="text-white font-bold text-sm">WAFlux Business</h3>
+                  <h3 className="text-white font-bold text-sm">WBIZZ Business</h3>
                   <p className="text-[#02C173] text-xs flex items-center gap-1 font-medium">
                     <span className="w-2 h-2 rounded-full bg-[#02C173] animate-pulse"></span> Online
                   </p>
@@ -138,7 +138,7 @@ export default function HeroSection() {
                 <div className="flex items-start gap-3 relative z-10 animate-fade-in-up">
                   <div className="bg-[#1f2c34] p-3 rounded-r-xl rounded-bl-xl text-white/90 text-sm shadow-md max-w-[85%] border border-white/5 leading-relaxed">
                     <span className="text-[#02C173] text-xs font-bold block mb-1">Support Bot</span>
-                    Hello! Welcome to WAFlux. Ready to automate your sales? 🚀
+                    Hello! Welcome to WBIZZ. Ready to automate your sales? 🚀
                     <span className="text-[10px] text-white/40 block text-right mt-1">10:00 AM</span>
                   </div>
                 </div>
@@ -157,7 +157,7 @@ export default function HeroSection() {
                 <div className="flex items-start gap-3 relative z-10 animate-fade-in-up animation-delay-4000">
                   <div className="bg-[#1f2c34] p-3 rounded-r-xl rounded-bl-xl text-white/90 text-sm shadow-md max-w-[85%] border border-white/5 leading-relaxed">
                     <span className="text-[#02C173] text-xs font-bold block mb-1">Support Bot</span>
-                    Easy! With WAFlux, you can send 5k messages in ~2 minutes with 99% delivery rate. ⚡
+                    Easy! With WBIZZ, you can send 5k messages in ~2 minutes with 99% delivery rate. ⚡
                     <br />
                     Starting setup...
                     <span className="text-[10px] text-white/40 block text-right mt-1">10:03 AM</span>

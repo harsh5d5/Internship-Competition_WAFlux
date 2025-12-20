@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 # --- User Models ---
 class User(BaseModel):
@@ -45,8 +45,13 @@ class Message(BaseModel):
     sender: str  # 'me' or 'them'
     text: Optional[str] = ""
     time: str
+    timestamp: Optional[float] = None
     status: str = "sent" # sent, delivered, read
     attachment: Optional[Attachment] = None
+    starred: bool = False
+    pinned: bool = False
+    reactions: List[str] = []
+    reply_to: Optional[str] = None # ID of the message being replied to
 
 class WhatsAppConfig(BaseModel):
     phone_number_id: str
@@ -76,6 +81,9 @@ class Contact(BaseModel):
     
     # New: Link contact to a user
     owner_email: Optional[str] = None 
+    current_node_id: Optional[str] = None # Track current position in automation flow
+    is_blocked: bool = False
+    is_reported: bool = False
 
 class Campaign(BaseModel):
     id: Optional[str] = None
@@ -122,4 +130,28 @@ class Template(BaseModel):
     last_updated: Optional[str] = None
     usage: int = 0
     owner_email: Optional[str] = None
+
+# --- Automation Models ---
+class FlowNode(BaseModel):
+    id: str
+    type: str
+    data: Dict[str, Any]
+    position: Dict[str, float]
+
+class FlowEdge(BaseModel):
+    id: str
+    source: str
+    target: str
+    sourceHandle: Optional[str] = None
+    targetHandle: Optional[str] = None
+    animated: Optional[bool] = True
+
+class AutomationFlow(BaseModel):
+    id: Optional[str] = None
+    name: str
+    status: str = "Draft" # Draft, Published
+    nodes: List[FlowNode]
+    edges: List[FlowEdge]
+    owner_email: Optional[str] = None
+    last_edited: Optional[float] = None
 

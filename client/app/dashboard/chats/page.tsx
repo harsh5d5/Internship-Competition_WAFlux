@@ -7,7 +7,9 @@ import {
     Smile, Mic, Check, CheckCheck, Menu, User,
     MessageSquare, Bell, LogOut, ChevronLeft, Info,
     FileText, Image as ImageIcon, ArrowDownRight, Camera,
-    Send, X, Zap, LayoutGrid, Settings, Tag, DollarSign
+    Send, X, Zap, LayoutGrid, Settings, Tag, DollarSign, Trash2,
+    Reply, Copy, Forward, Pin, Star, CheckSquare, BellOff, Clock, Heart, XCircle, ThumbsDown, Ban, MinusCircle,
+    CheckCircle, AlertCircle
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
@@ -20,26 +22,346 @@ export default function ChatsPage() {
     const [inputText, setInputText] = useState("");
     const [showRightSidebar, setShowRightSidebar] = useState(false);
 
-    // States
     const [searchQuery, setSearchQuery] = useState("");
     const [activeFilter, setActiveFilter] = useState("All");
     const [isRecording, setIsRecording] = useState(false);
     const [showAttachments, setShowAttachments] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [showChatMenu, setShowChatMenu] = useState(false);
     const [inputMessage, setInputMessage] = useState("");
+    const [activeMessageMenuId, setActiveMessageMenuId] = useState<string | null>(null);
+    const [replyingToMessage, setReplyingToMessage] = useState<any | null>(null);
+    const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+    const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(new Set());
+    const [isForwarding, setIsForwarding] = useState(false);
+    const [forwardMessage, setForwardMessage] = useState<any>(null);
+    const [reactionPickerId, setReactionPickerId] = useState<string | null>(null);
+    const [messageInfoId, setMessageInfoId] = useState<string | null>(null);
+    const [toasts, setToasts] = useState<any[]>([]);
+    const [confirmConfig, setConfirmConfig] = useState<{ title: string, message: string, onConfirm: () => void } | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, message, type }]);
+        setTimeout(() => {
+            setToasts(prev => prev.filter(t => t.id !== id));
+        }, 4000);
+    };
+
+    const confirmAction = (title: string, message: string, onConfirm: () => void) => {
+        setConfirmConfig({ title, message, onConfirm });
+    };
 
     // Helper to mark as read
     const markChatAsRead = async (id: string) => {
         const token = localStorage.getItem("access_token");
         try {
-            await fetch(`http://localhost:8000/api/leads/${id}/read`, {
+            await fetch(`http://127.0.0.1:8000/api/leads/${id}/read`, {
                 method: 'PUT',
                 headers: { "Authorization": `Bearer ${token}` }
             });
+
         } catch (err) {
             console.error("Failed to mark as read", err);
+        }
+    };
+
+    // Clear Chat Functionality
+    // Lead / Chat Actions
+    const handleDeleteChat = async (id: string) => {
+        confirmAction(
+            "Delete Chat?",
+            "Are you sure you want to delete this entire chat conversation? This action cannot be undone.",
+            async () => {
+                const token = localStorage.getItem("access_token");
+                try {
+                    await fetch(`http://127.0.0.1:8000/api/leads/${id}`, {
+                        method: 'DELETE',
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    setChats(prev => prev.filter(c => c.id !== id));
+                    setSelectedChatId(null);
+                    setShowChatMenu(false);
+                    showToast("Chat deleted", "info");
+                } catch (err) {
+                    console.error("Failed to delete chat", err);
+                }
+            }
+        );
+    };
+
+    const handleBlockContact = async (id: string) => {
+        confirmAction(
+            "Block Contact?",
+            "Block this contact? You will no longer receive messages from them.",
+            async () => {
+                const token = localStorage.getItem("access_token");
+                try {
+                    await fetch(`http://127.0.0.1:8000/api/leads/${id}/block`, {
+                        method: 'POST',
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    showToast("Contact blocked", "info");
+                    setShowChatMenu(false);
+                    fetchChats();
+                } catch (err) {
+                    console.error("Failed to block contact", err);
+                }
+            }
+        );
+    };
+
+    const handleReportContact = async (id: string) => {
+        confirmAction(
+            "Report Contact?",
+            "Report this contact for spam or abuse?",
+            async () => {
+                const token = localStorage.getItem("access_token");
+                try {
+                    await fetch(`http://127.0.0.1:8000/api/leads/${id}/report`, {
+                        method: 'POST',
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    showToast("Contact reported", "warning");
+                    setShowChatMenu(false);
+                } catch (err) {
+                    console.error("Failed to report contact", err);
+                }
+            }
+        );
+    };
+
+    // Message Actions
+    const handleDeleteMessage = async (leadId: string, msgId: string) => {
+        confirmAction(
+            "Delete Message?",
+            "Are you sure you want to delete this message? This action cannot be undone.",
+            async () => {
+                const token = localStorage.getItem("access_token");
+                try {
+                    await fetch(`http://127.0.0.1:8000/api/leads/${leadId}/messages/${msgId}`, {
+                        method: 'DELETE',
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    setChats(prev => prev.map(chat => {
+                        if (chat.id === leadId) {
+                            return { ...chat, messages: chat.messages.filter((m: any) => m.id !== msgId) };
+                        }
+                        return chat;
+                    }));
+                    setActiveMessageMenuId(null);
+                    showToast("Message deleted", "info");
+                } catch (err) {
+                    console.error("Failed to delete message", err);
+                }
+            }
+        );
+    };
+
+    const handleCopyMessage = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setActiveMessageMenuId(null);
+        showToast("Copied to clipboard", "info");
+    };
+
+    const handleStarMessage = async (leadId: string, msgId: string, currentState: boolean) => {
+        const token = localStorage.getItem("access_token");
+        try {
+            await fetch(`http://127.0.0.1:8000/api/leads/${leadId}/messages/${msgId}/star`, {
+                method: 'PUT',
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ starred: !currentState })
+            });
+            setChats(prev => prev.map(chat => {
+                if (chat.id === leadId) {
+                    return {
+                        ...chat,
+                        messages: chat.messages.map((m: any) => m.id === msgId ? { ...m, starred: !currentState } : m)
+                    };
+                }
+                return chat;
+            }));
+            setActiveMessageMenuId(null);
+        } catch (err) {
+            console.error("Failed to star message", err);
+        }
+    };
+
+    const handlePinMessage = async (leadId: string, msgId: string, currentState: boolean) => {
+        const token = localStorage.getItem("access_token");
+        try {
+            await fetch(`http://127.0.0.1:8000/api/leads/${leadId}/messages/${msgId}/pin`, {
+                method: 'PUT',
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ pinned: !currentState })
+            });
+            setChats(prev => prev.map(chat => {
+                if (chat.id === leadId) {
+                    return {
+                        ...chat,
+                        messages: chat.messages.map((m: any) => m.id === msgId ? { ...m, pinned: !currentState } : m)
+                    };
+                }
+                return chat;
+            }));
+            setActiveMessageMenuId(null);
+        } catch (err) {
+            console.error("Failed to pin message", err);
+        }
+    };
+
+    const handleReactToMessage = async (leadId: string, msgId: string, emoji: string) => {
+        const token = localStorage.getItem("access_token");
+        try {
+            await fetch(`http://127.0.0.1:8000/api/leads/${leadId}/messages/${msgId}/react`, {
+                method: 'POST',
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ emoji })
+            });
+            setChats(prev => prev.map(chat => {
+                if (chat.id === leadId) {
+                    return {
+                        ...chat,
+                        messages: chat.messages.map((m: any) => {
+                            if (m.id === msgId) {
+                                const reactions = m.reactions || [];
+                                return { ...m, reactions: [...new Set([...reactions, emoji])] };
+                            }
+                            return m;
+                        })
+                    };
+                }
+                return chat;
+            }));
+            setActiveMessageMenuId(null);
+        } catch (err) {
+            console.error("Failed to react to message", err);
+        }
+    };
+
+    const toggleMessageSelection = (msgId: string) => {
+        setSelectedMessageIds(prev => {
+            const next = new Set(prev);
+            if (next.has(msgId)) next.delete(msgId);
+            else next.add(msgId);
+            return next;
+        });
+    };
+
+    const handleClearChat = async (id: string) => {
+        confirmAction(
+            "Clear Chat?",
+            "Are you sure you want to clear all messages in this chat?",
+            async () => {
+                const token = localStorage.getItem("access_token");
+
+                // Optimistic UI update - Clear immediately
+                setChats(prev => prev.map(chat => {
+                    if (chat.id === id) {
+                        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        return { ...chat, messages: [], lastMessage: "Chat cleared", time: now };
+                    }
+                    return chat;
+                }));
+                setShowChatMenu(false);
+
+                try {
+                    const res = await fetch(`http://127.0.0.1:8000/api/leads/${id}/messages`, {
+                        method: 'DELETE',
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+
+                    if (res.ok) {
+                        showToast("Chat history cleared", "success");
+                    } else {
+                        fetchChats();
+                    }
+                } catch (err) {
+                    console.error("Failed to clear chat", err);
+                    fetchChats();
+                }
+            }
+        );
+    };
+
+    const handleForwardMessage = async (targetChatId: string) => {
+        if (!forwardMessage) return;
+        const token = localStorage.getItem("access_token");
+        try {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            await fetch(`http://127.0.0.1:8000/api/leads/${targetChatId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    text: forwardMessage.text + "\n\n*(Forwarded)*",
+                    sender: 'me',
+                    time: time,
+                    attachment: forwardMessage.attachment
+                })
+            });
+            setIsForwarding(false);
+            setForwardMessage(null);
+            showToast("Message forwarded successfully", "success");
+            fetchChats();
+        } catch (err) {
+            console.error("Failed to forward", err);
+        }
+    };
+
+    const groupMessagesByDate = (messages: any[]) => {
+        const groups: { [key: string]: any[] } = {};
+        messages.forEach(msg => {
+            let dateLabel = "Today";
+            if (msg.timestamp) {
+                const date = new Date(msg.timestamp * 1000);
+                const today = new Date();
+                const yesterday = new Date();
+                yesterday.setDate(today.getDate() - 1);
+
+                if (date.toDateString() === today.toDateString()) {
+                    dateLabel = "Today";
+                } else if (date.toDateString() === yesterday.toDateString()) {
+                    dateLabel = "Yesterday";
+                } else {
+                    dateLabel = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined });
+                }
+            } else if (msg.time === "Yesterday") {
+                dateLabel = "Yesterday";
+            }
+
+            if (!groups[dateLabel]) groups[dateLabel] = [];
+            groups[dateLabel].push(msg);
+        });
+        return groups;
+    };
+
+    const formatChatTime = (timestamp: number, fallback: string) => {
+        if (!timestamp) return fallback;
+        const date = new Date(timestamp * 1000);
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else if (date.toDateString() === yesterday.toDateString()) {
+            return "Yesterday";
+        } else {
+            return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
         }
     };
 
@@ -47,7 +369,7 @@ export default function ChatsPage() {
     const fetchChats = async () => {
         const token = localStorage.getItem("access_token");
         try {
-            const res = await fetch("http://localhost:8000/api/leads", {
+            const res = await fetch("http://127.0.0.1:8000/api/leads", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (res.status === 401) {
@@ -68,7 +390,7 @@ export default function ChatsPage() {
                 status: lead.status || "active",
                 tags: lead.tags || [],
                 lastMessage: lead.messages?.length > 0 ? lead.messages[lead.messages.length - 1].text : "No messages",
-                time: lead.last_contact || "12:00 PM",
+                time: formatChatTime(lead.updated_at, lead.last_contact || "12:00 PM"),
                 unread: lead.id === selectedChatId ? 0 : (lead.unread || 0), // FIX: Force 0 if active
                 online: Math.random() > 0.7,
                 messages: lead.messages || []
@@ -134,11 +456,15 @@ export default function ChatsPage() {
 
         if (!inputMessage.trim() && !fileInputRef.current?.files?.length) return;
 
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
         const newMessage = {
             id: Date.now(),
             sender: 'me',
             text: inputMessage,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            time: formattedTime,
+            timestamp: now.getTime() / 1000,
             status: 'sent',
             avatar: "https://i.pravatar.cc/150?u=me"
         };
@@ -162,7 +488,7 @@ export default function ChatsPage() {
         // Sync with backend
         try {
             const token = localStorage.getItem("access_token");
-            await fetch(`http://localhost:8000/api/leads/${selectedChatId}/messages`, {
+            await fetch(`http://127.0.0.1:8000/api/leads/${selectedChatId}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -171,9 +497,11 @@ export default function ChatsPage() {
                 body: JSON.stringify({
                     text: newMessage.text,
                     sender: 'me',
-                    time: newMessage.time
+                    time: newMessage.time,
+                    reply_to: replyingToMessage?.id
                 })
             });
+            setReplyingToMessage(null);
         } catch (error) {
             console.error("Failed to send message", error);
         }
@@ -189,7 +517,7 @@ export default function ChatsPage() {
 
         try {
             const token = localStorage.getItem("access_token");
-            const response = await fetch('http://localhost:8000/api/upload', {
+            const response = await fetch('http://127.0.0.1:8000/api/upload', {
                 method: 'POST',
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData,
@@ -205,6 +533,7 @@ export default function ChatsPage() {
                 sender: 'me',
                 text: "",
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                timestamp: Date.now() / 1000,
                 status: 'sent',
                 avatar: "https://i.pravatar.cc/150?u=me",
                 attachment: {
@@ -230,7 +559,7 @@ export default function ChatsPage() {
             setShowAttachments(false);
 
             // Sync with backend
-            await fetch(`http://localhost:8000/api/leads/${selectedChatId}/messages`, {
+            await fetch(`http://127.0.0.1:8000/api/leads/${selectedChatId}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -362,7 +691,77 @@ export default function ChatsPage() {
 
                 {selectedChat ? (
                     <>
-                        <div className="h-16 flex items-center justify-between px-4 py-2 bg-[#202c33] z-10 shrink-0 shadow-sm">
+                        <AnimatePresence>
+                            {isMultiSelectMode && (
+                                <motion.div
+                                    initial={{ y: -60 }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: -60 }}
+                                    className="h-16 flex items-center justify-between px-6 bg-[#202c33] z-[100] border-b border-[#303d45] absolute top-0 left-0 right-0 shadow-lg"
+                                >
+                                    <div className="flex items-center gap-6">
+                                        <X className="w-6 h-6 text-gray-400 cursor-pointer hover:text-white transition-colors" onClick={() => { setIsMultiSelectMode(false); setSelectedMessageIds(new Set()); }} />
+                                        <div className="flex flex-col">
+                                            <span className="text-white font-medium text-sm">{selectedMessageIds.size} selected</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-7">
+                                        <Star
+                                            className="w-5 h-5 text-gray-400 cursor-pointer hover:text-yellow-500 transition-colors"
+                                            onClick={async () => {
+                                                const token = localStorage.getItem("access_token");
+                                                for (const id of Array.from(selectedMessageIds)) {
+                                                    await fetch(`http://127.0.0.1:8000/api/leads/${selectedChat.id}/messages/${id}/star`, {
+                                                        method: 'PUT',
+                                                        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                                                        body: JSON.stringify({ starred: true })
+                                                    });
+                                                }
+                                                fetchChats();
+                                                setIsMultiSelectMode(false);
+                                                setSelectedMessageIds(new Set());
+                                                showToast(`${selectedMessageIds.size} messages starred`, "success");
+                                            }}
+                                        />
+                                        <Forward
+                                            className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white transition-colors"
+                                            onClick={() => {
+                                                // Take the first selected message for simplicity in forward
+                                                const firstId = Array.from(selectedMessageIds)[0];
+                                                const msg = selectedChat.messages.find((m: any) => m.id === firstId);
+                                                if (msg) setForwardMessage(msg);
+                                                setIsForwarding(true);
+                                                setIsMultiSelectMode(false);
+                                                setSelectedMessageIds(new Set());
+                                            }}
+                                        />
+                                        <Trash2
+                                            className="w-5 h-5 text-gray-400 cursor-pointer hover:text-red-400 transition-colors"
+                                            onClick={() => {
+                                                confirmAction(
+                                                    "Delete Multiple?",
+                                                    `Do you want to delete ${selectedMessageIds.size} selected messages?`,
+                                                    async () => {
+                                                        const token = localStorage.getItem("access_token");
+                                                        for (const id of Array.from(selectedMessageIds)) {
+                                                            await fetch(`http://127.0.0.1:8000/api/leads/${selectedChat.id}/messages/${id}`, {
+                                                                method: 'DELETE',
+                                                                headers: { "Authorization": `Bearer ${token}` }
+                                                            });
+                                                        }
+                                                        fetchChats();
+                                                        setIsMultiSelectMode(false);
+                                                        setSelectedMessageIds(new Set());
+                                                        showToast("Selected messages deleted", "info");
+                                                    }
+                                                );
+                                            }}
+                                        />
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                        <div className="h-16 flex items-center justify-between px-4 py-2 bg-[#202c33] z-50 shrink-0 shadow-sm relative">
                             <div
                                 className="flex items-center gap-4 cursor-pointer"
                                 onClick={() => setShowRightSidebar(!showRightSidebar)}
@@ -383,159 +782,404 @@ export default function ChatsPage() {
                             <div className="flex items-center gap-6 pr-2">
                                 <Phone className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
                                 <div className="w-px h-6 bg-gray-600/30"></div>
-                                <Info
-                                    onClick={() => setShowRightSidebar(!showRightSidebar)}
-                                    className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors"
-                                />
+                                <div className="relative z-[120]">
+                                    <MoreVertical
+                                        id="chat-header-more"
+                                        onClick={() => setShowChatMenu(!showChatMenu)}
+                                        className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors"
+                                    />
+                                    {showChatMenu && (
+                                        <>
+                                            <div className="fixed inset-0 z-[90]" onClick={() => setShowChatMenu(false)}></div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                className="absolute right-0 top-full mt-2 w-64 bg-[#233138] rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.5)] py-2 z-[130] border border-[#303d45] text-gray-300 overflow-hidden"
+                                            >
+                                                <button
+                                                    onClick={() => {
+                                                        setShowRightSidebar(true);
+                                                        setShowChatMenu(false);
+                                                    }}
+                                                    className="w-full text-left px-4 py-2.5 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors"
+                                                >
+                                                    <Info className="w-4 h-4" /> Contact info
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsMultiSelectMode(true);
+                                                        setShowChatMenu(false);
+                                                    }}
+                                                    className="w-full text-left px-4 py-2.5 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors"
+                                                >
+                                                    <CheckSquare className="w-4 h-4" /> Select messages
+                                                </button>
+
+                                                <div className="h-px bg-[#202c33] mx-2 my-1"></div>
+
+                                                <button onClick={() => handleReportContact(selectedChat.id)} className="w-full text-left px-4 py-2.5 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                    <ThumbsDown className="w-4 h-4" /> Report
+                                                </button>
+                                                <button onClick={() => handleBlockContact(selectedChat.id)} className="w-full text-left px-4 py-2.5 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                    <Ban className="w-4 h-4" /> Block
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        handleClearChat(selectedChat.id);
+                                                        setShowChatMenu(false);
+                                                    }}
+                                                    className="w-full text-left px-4 py-2.5 hover:bg-red-500/10 text-sm flex items-center gap-3 text-red-400 transition-colors group"
+                                                >
+                                                    <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> Clear chat
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteChat(selectedChat.id)}
+                                                    className="w-full text-left px-4 py-2.5 hover:bg-red-500/10 text-sm flex items-center gap-3 text-red-400 transition-colors group"
+                                                >
+                                                    <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> Delete chat
+                                                </button>
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar relative z-10">
-                            <div className="flex justify-center my-4 sticky top-0 z-20">
-                                <span className="bg-[#1f2c34] text-gray-400 text-xs px-3 py-1.5 rounded-lg shadow-sm border border-[#1f2c34]">Today</span>
-                            </div>
-
-                            {selectedChat.messages.map((msg: any) => (
-                                <motion.div
-                                    key={msg.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} mb-2`}
-                                >
-                                    <div className={`max-w-[70%] px-2 pt-2 pb-1 text-sm rounded-lg shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] relative group
-                                        ${msg.sender === 'me'
-                                            ? 'bg-[#005c4b] text-white rounded-tr-none'
-                                            : 'bg-[#202c33] text-gray-100 rounded-tl-none'}`}
-                                    >
-                                        {/* Attachment Rendering */}
-                                        {msg.attachment && (
-                                            <div className="mb-1 rounded overflow-hidden">
-                                                {msg.attachment.type && msg.attachment.type.startsWith('image') ? (
-                                                    <img src={msg.attachment.url} alt={msg.attachment.name} className="max-w-full h-auto rounded-lg max-h-64 object-cover" />
-                                                ) : (msg.attachment.url ? (
-                                                    <div className="flex items-center gap-3 bg-black/10 p-3 rounded-lg">
-                                                        <div className="bg-red-500/20 p-2 rounded text-red-400">
-                                                            <FileText className="w-6 h-6" />
-                                                        </div>
-                                                        <div className="overflow-hidden">
-                                                            <p className="font-medium truncate text-sm">{msg.attachment.name}</p>
-                                                            <p className="text-xs opacity-70 uppercase">{msg.attachment.type.split('/')[1] || 'FILE'}</p>
-                                                        </div>
-                                                        <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" className="ml-auto p-2 hover:bg-black/10 rounded-full">
-                                                            <ArrowDownRight className="w-5 h-5" />
-                                                        </a>
-                                                    </div>
-                                                ) : null)}
-                                            </div>
-                                        )}
-
-                                        <p className="leading-relaxed px-1 text-[14.2px]">{msg.text}</p>
-                                        <div className="flex items-center justify-end gap-1 mt-1 pl-4 min-w-[4rem]">
-                                            <span className={`text-[10px] ${msg.sender === 'me' ? 'text-white/60' : 'text-gray-400'}`}>{msg.time}</span>
-                                            {msg.sender === 'me' && (
-                                                <>
-                                                    {msg.status === 'read' ? (
-                                                        <CheckCheck className="w-3.5 h-3.5 text-[#53bdeb]" />
-                                                    ) : msg.status === 'delivered' ? (
-                                                        <CheckCheck className="w-3.5 h-3.5 text-gray-400" />
-                                                    ) : (
-                                                        <Check className="w-3.5 h-3.5 text-gray-400" />
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
+                            {Object.entries(groupMessagesByDate(selectedChat.messages)).map(([date, msgs]) => (
+                                <div key={date} className="space-y-1">
+                                    <div className="flex justify-center my-4 sticky top-0 z-20">
+                                        <span className="bg-[#1f2c34] text-gray-400 text-xs px-3 py-1.5 rounded-lg shadow-sm border border-[#1f2c34]">{date}</span>
                                     </div>
-                                </motion.div>
+
+                                    {msgs.map((msg: any) => (
+                                        <motion.div
+                                            key={msg.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            onClick={() => isMultiSelectMode && toggleMessageSelection(msg.id)}
+                                            className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} mb-2 ${isMultiSelectMode ? 'cursor-pointer' : ''}`}
+                                        >
+                                            <div className="flex items-center gap-3 max-w-[85%]">
+                                                {isMultiSelectMode && (
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMessageIds.has(msg.id) ? 'bg-[#00a884] border-[#00a884]' : 'border-gray-500'}`}>
+                                                        {selectedMessageIds.has(msg.id) && <Check className="w-3 h-3 text-[#111b21]" />}
+                                                    </div>
+                                                )}
+                                                <div className={`px-3 pt-2 pb-1.5 text-[14.2px] rounded-lg shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] relative group
+                                                    ${msg.sender === 'me'
+                                                        ? 'bg-[#005c4b] text-white rounded-tr-none'
+                                                        : 'bg-[#202c33] text-gray-100 rounded-tl-none'}
+                                                    ${isMultiSelectMode && selectedMessageIds.has(msg.id) ? 'ring-2 ring-[#00a884]' : ''}`}
+                                                >
+                                                    {/* Attachment Rendering */}
+                                                    {msg.attachment && (
+                                                        <div className="mb-1 rounded overflow-hidden">
+                                                            {msg.attachment.type && msg.attachment.type.startsWith('image') ? (
+                                                                <img src={msg.attachment.url} alt={msg.attachment.name} className="max-w-full h-auto rounded-lg max-h-64 object-cover" />
+                                                            ) : (msg.attachment.url ? (
+                                                                <div className="flex items-center gap-3 bg-black/10 p-3 rounded-lg">
+                                                                    <div className="bg-red-500/20 p-2 rounded text-red-400">
+                                                                        <FileText className="w-6 h-6" />
+                                                                    </div>
+                                                                    <div className="overflow-hidden">
+                                                                        <p className="font-medium truncate text-sm">{msg.attachment.name}</p>
+                                                                        <p className="text-xs opacity-70 uppercase">{msg.attachment.type.split('/')[1] || 'FILE'}</p>
+                                                                    </div>
+                                                                    <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" className="ml-auto p-2 hover:bg-black/10 rounded-full">
+                                                                        <ArrowDownRight className="w-5 h-5" />
+                                                                    </a>
+                                                                </div>
+                                                            ) : null)}
+                                                        </div>
+                                                    )}
+
+                                                    <div className="relative min-w-[90px] flex flex-col">
+                                                        <div className="pr-[64px] pb-1">
+                                                            <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
+                                                        </div>
+                                                        <div className="absolute bottom-0 right-[-4px] flex items-center gap-1 shrink-0 px-1 pb-0.5 select-none">
+                                                            <span className="text-[10.5px] opacity-60 font-medium tabular-nums whitespace-nowrap">
+                                                                {msg.time === "Just now" && msg.timestamp
+                                                                    ? new Date(msg.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                                                    : msg.time}
+                                                            </span>
+                                                            {msg.sender === 'me' && (
+                                                                <div className="flex scale-[0.7] origin-right ml-0.5">
+                                                                    {msg.status === 'read' ? (
+                                                                        <CheckCheck className="w-4 h-4 text-[#53bdeb] stroke-[3]" />
+                                                                    ) : msg.status === 'delivered' ? (
+                                                                        <CheckCheck className="w-4 h-4 text-gray-400 stroke-[3]" />
+                                                                    ) : (
+                                                                        <Check className="w-4 h-4 text-gray-400 stroke-[3]" />
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Message Actions Dropdown */}
+                                                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                                        <div
+                                                            onClick={() => setActiveMessageMenuId(activeMessageMenuId === msg.id ? null : msg.id)}
+                                                            className="bg-black/20 hover:bg-black/30 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+                                                        >
+                                                            <ArrowDownRight className="w-3 h-3 rotate-90" />
+                                                        </div>
+
+                                                        <AnimatePresence>
+                                                            {activeMessageMenuId === msg.id && (
+                                                                <>
+                                                                    <div className="fixed inset-0 z-[90]" onClick={() => setActiveMessageMenuId(null)}></div>
+                                                                    <motion.div
+                                                                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                                        className={`absolute top-8 ${msg.sender === 'me' ? 'right-0' : 'left-0'} w-44 bg-[#233138] rounded-xl shadow-2xl py-2 z-[100] border border-[#303d45] text-gray-300 overflow-hidden`}
+                                                                    >
+                                                                        <button onClick={() => { setMessageInfoId(msg.id); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                            <Info className="w-4 h-4" /> Message info
+                                                                        </button>
+                                                                        <button onClick={() => { setReplyingToMessage(msg); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                            <Reply className="w-4 h-4" /> Reply
+                                                                        </button>
+                                                                        <button onClick={() => handleCopyMessage(msg.text)} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                            <Copy className="w-4 h-4" /> Copy
+                                                                        </button>
+                                                                        <button onClick={() => { setReactionPickerId(msg.id); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                            <Smile className="w-4 h-4" /> React
+                                                                        </button>
+                                                                        <button onClick={() => { setForwardMessage(msg); setIsForwarding(true); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                            <Forward className="w-4 h-4" /> Forward
+                                                                        </button>
+                                                                        <button onClick={() => handlePinMessage(selectedChat.id, msg.id, msg.pinned)} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                            <Pin className={`w-4 h-4 ${msg.pinned ? 'text-[#00a884]' : ''}`} /> {msg.pinned ? 'Unpin' : 'Pin'}
+                                                                        </button>
+                                                                        <button onClick={() => handleStarMessage(selectedChat.id, msg.id, msg.starred)} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                            <Star className={`w-4 h-4 ${msg.starred ? 'text-yellow-500 fill-yellow-500' : ''}`} /> {msg.starred ? 'Unstar' : 'Star'}
+                                                                        </button>
+                                                                        <div className="h-px bg-[#303d45] my-1 mx-2"></div>
+                                                                        <button onClick={() => handleDeleteMessage(selectedChat.id, msg.id)} className="w-full text-left px-4 py-2 hover:bg-red-500/10 text-sm flex items-center gap-3 text-red-400 transition-colors">
+                                                                            <Trash2 className="w-4 h-4" /> Delete
+                                                                        </button>
+                                                                    </motion.div>
+                                                                </>
+                                                            )}
+                                                        </AnimatePresence>
+                                                    </div>
+
+                                                    {/* Reaction Picker Overlay */}
+                                                    <AnimatePresence>
+                                                        {reactionPickerId === msg.id && (
+                                                            <>
+                                                                <div className="fixed inset-0 z-[110]" onClick={() => setReactionPickerId(null)}></div>
+                                                                <motion.div
+                                                                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                    exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                                                                    className={`absolute -top-12 ${msg.sender === 'me' ? 'right-0' : 'left-0'} flex gap-2 bg-[#233138] p-2 rounded-full shadow-2xl z-[120] border border-[#303d45]`}
+                                                                >
+                                                                    {['❤️', '👍', '😂', '😮', '😢', '🙏'].map(emoji => (
+                                                                        <button
+                                                                            key={emoji}
+                                                                            onClick={() => {
+                                                                                handleReactToMessage(selectedChat.id, msg.id, emoji);
+                                                                                setReactionPickerId(null);
+                                                                            }}
+                                                                            className="text-xl hover:scale-125 transition-transform p-1"
+                                                                        >
+                                                                            {emoji}
+                                                                        </button>
+                                                                    ))}
+                                                                </motion.div>
+                                                            </>
+                                                        )}
+                                                    </AnimatePresence>
+
+                                                    {/* Message Info Modal */}
+                                                    <AnimatePresence>
+                                                        {messageInfoId === msg.id && (
+                                                            <>
+                                                                <div className="fixed inset-0 z-[150] bg-black/60 flex items-center justify-center p-4" onClick={() => setMessageInfoId(null)}>
+                                                                    <motion.div
+                                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                                        animate={{ opacity: 1, scale: 1 }}
+                                                                        className="bg-[#233138] w-full max-w-sm rounded-2xl shadow-2xl border border-[#303d45] p-6 space-y-4"
+                                                                        onClick={e => e.stopPropagation()}
+                                                                    >
+                                                                        <div className="flex items-center justify-between">
+                                                                            <h3 className="text-xl font-semibold text-white">Message Info</h3>
+                                                                            <button onClick={() => setMessageInfoId(null)} className="text-gray-400 hover:text-white">
+                                                                                <X className="w-6 h-6" />
+                                                                            </button>
+                                                                        </div>
+                                                                        <div className="space-y-4 text-gray-300">
+                                                                            <div className="flex justify-between border-b border-[#303d45] pb-2">
+                                                                                <span>Status</span>
+                                                                                <span className="capitalize text-[#00a884]">{msg.status}</span>
+                                                                            </div>
+                                                                            <div className="flex justify-between border-b border-[#303d45] pb-2">
+                                                                                <span>Sent</span>
+                                                                                <span>{msg.time}</span>
+                                                                            </div>
+                                                                            <div className="flex justify-between border-b border-[#303d45] pb-2">
+                                                                                <span>Date</span>
+                                                                                <span>{new Date(msg.timestamp * 1000).toLocaleDateString()}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </motion.div>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </AnimatePresence>
+
+                                                    {/* Reply Context inside Bubble */}
+                                                    {msg.reply_to && (
+                                                        <div className="mb-2 p-2 rounded bg-black/20 border-l-4 border-[#00a884] opacity-80 cursor-pointer" onClick={() => {
+                                                            const element = document.getElementById(`msg-${msg.reply_to}`);
+                                                            element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                            element?.classList.add('ring-2', 'ring-[#00a884]');
+                                                            setTimeout(() => element?.classList.remove('ring-2', 'ring-[#00a884]'), 2000);
+                                                        }}>
+                                                            {(() => {
+                                                                const repliedMsg = selectedChat.messages.find((m: any) => m.id === msg.reply_to);
+                                                                return (
+                                                                    <>
+                                                                        <p className="text-[#00a884] text-[11px] font-bold uppercase">{repliedMsg?.sender === 'me' ? 'You' : selectedChat.name}</p>
+                                                                        <p className="text-xs line-clamp-1">{repliedMsg?.text || '📎 Attachment'}</p>
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    )}
+                                                    {/* Reactions Display */}
+                                                    {msg.reactions && msg.reactions.length > 0 && (
+                                                        <div className={`absolute -bottom-2 ${msg.sender === 'me' ? 'right-0' : 'left-0'} flex gap-1 bg-[#202c33] rounded-full px-1.5 py-0.5 shadow-sm border border-[#303d45] scale-90`}>
+                                                            {msg.reactions.map((emoji: string, i: number) => (
+                                                                <span key={i} className="text-xs">{emoji}</span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Pin/Star Icons */}
+                                                    <div className="absolute top-1 left-1 flex gap-1 opacity-60">
+                                                        {msg.pinned && <Pin className="w-3 h-3 text-[#00a884]" />}
+                                                        {msg.starred && <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
                             ))}
                             <div ref={messagesEndRef} />
                         </div>
 
-                        <div className="min-h-[62px] px-4 py-2 bg-[#202c33] z-10 flex items-end mb-0 relative">
+                        {/* INPUT AREA */}
+                        <div className="min-h-[62px] px-4 py-2 bg-[#202c33] z-50 flex items-end relative">
                             {/* Attachment Menu */}
                             <AnimatePresence>
                                 {showAttachments && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                        className="absolute bottom-20 left-4 flex flex-col gap-4 mb-2 z-50"
-                                    >
-                                        <div className="flex flex-col gap-4">
-                                            <button
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className="flex items-center gap-3 group"
-                                            >
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-t from-purple-600 to-purple-500 shadow-lg flex items-center justify-center text-white transition-transform group-hover:-translate-y-1">
-                                                    <FileText className="w-6 h-6" />
-                                                </div>
-                                                {/* Label could be added here if needed */}
-                                            </button>
-                                            <button
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className="flex items-center gap-3 group"
-                                            >
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-t from-pink-600 to-pink-500 shadow-lg flex items-center justify-center text-white transition-transform group-hover:-translate-y-1">
-                                                    <ImageIcon className="w-6 h-6" />
-                                                </div>
-                                            </button>
-                                        </div>
+                                    <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="absolute bottom-20 left-4 flex flex-col gap-4 mb-2 z-50">
+                                        <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-3 group">
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-t from-purple-600 to-purple-500 shadow-lg flex items-center justify-center text-white transition-transform group-hover:-translate-y-1">
+                                                <FileText className="w-6 h-6" />
+                                            </div>
+                                        </button>
+                                        <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-3 group">
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-t from-pink-600 to-pink-500 shadow-lg flex items-center justify-center text-white transition-transform group-hover:-translate-y-1">
+                                                <ImageIcon className="w-6 h-6" />
+                                            </div>
+                                        </button>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            {/* Hidden File Input */}
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                onChange={handleFileUpload}
-                            />
+                            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
 
-                            <button
-                                className={`p-3 mr-2 rounded-full transition-colors hover:bg-[#374248] ${showAttachments ? 'bg-[#374248] text-gray-300' : 'text-gray-400'}`}
-                                onClick={() => setShowAttachments(!showAttachments)}
-                            >
+                            <button onClick={() => setShowAttachments(!showAttachments)} className={`p-2 rounded-full transition-colors hover:bg-[#374248] mb-1 text-gray-400 ${showAttachments ? 'text-[#00a884]' : ''}`}>
                                 <Paperclip className={`w-6 h-6 transition-transform ${showAttachments ? 'rotate-45' : ''}`} />
                             </button>
-                            <div className="flex-1 bg-[#2a3942] rounded-lg flex items-center mb-1.5">
-                                <input
-                                    type="text"
-                                    value={inputMessage}
-                                    onChange={(e) => setInputMessage(e.target.value)}
-                                    placeholder="Type a message"
-                                    className="flex-1 bg-transparent text-white px-4 py-2.5 text-[15px] focus:outline-none placeholder-gray-400"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleSendMessage();
-                                    }}
-                                />
+
+                            <div className="flex-1 flex flex-col mb-1.5 min-w-0 mx-2">
+                                <AnimatePresence>
+                                    {replyingToMessage && (
+                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="bg-[#111b21] border-l-4 border-[#00a884] rounded-t-lg px-3 py-2 flex items-center justify-between mb-1">
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[#00a884] text-xs font-medium">{replyingToMessage.sender === 'me' ? 'You' : selectedChat.name}</p>
+                                                <p className="text-gray-400 text-sm truncate">{replyingToMessage.text || '📎 Attachment'}</p>
+                                            </div>
+                                            <button onClick={() => setReplyingToMessage(null)} className="text-gray-500 hover:text-white ml-2"><X className="w-4 h-4" /></button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                                <div className={`bg-[#2a3942] rounded-lg flex items-center ${replyingToMessage ? 'rounded-t-none' : ''}`}>
+                                    <input
+                                        type="text"
+                                        value={inputMessage}
+                                        onChange={(e) => setInputMessage(e.target.value)}
+                                        placeholder="Type a message"
+                                        className="flex-1 bg-transparent text-white px-4 py-2.5 text-[15px] focus:outline-none placeholder-gray-400"
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
+                                    />
+                                </div>
                             </div>
+
                             {inputMessage.trim() ? (
-                                <button
-                                    onClick={handleSendMessage}
-                                    className="p-3 ml-2 mb-1.5 bg-[#00a884] hover:bg-[#02906f] rounded-full text-[#111b21] transition-transform active:scale-95 shadow-lg"
-                                >
+                                <button onClick={() => handleSendMessage()} className="p-3 mb-1.5 bg-[#00a884] hover:bg-[#02906f] rounded-full text-[#111b21] transition-transform active:scale-95 shadow-lg">
                                     <Send className="w-5 h-5 ml-0.5" />
                                 </button>
                             ) : (
-                                <button
-                                    className="p-3 ml-2 mb-1.5 rounded-full transition-colors hover:bg-[#374248] text-gray-400"
-                                    onClick={() => setIsRecording(!isRecording)}
-                                >
+                                <button onClick={() => setIsRecording(!isRecording)} className={`p-3 mb-1.5 rounded-full transition-colors hover:bg-[#374248] ${isRecording ? 'text-red-500' : 'text-gray-400'}`}>
                                     <Mic className="w-6 h-6" />
                                 </button>
                             )}
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-gray-600 z-10">
-                        {/* Empty State with Image */}
-                        <div className="w-[300px] text-center">
-                            <img src="https://static.whatsapp.net/rsrc.php/v3/y6/r/wa669ae.svg" alt="Welcome" className="mx-auto opacity-20 mb-8" />
-                            <h2 className="text-3xl font-light text-gray-300 mb-4">WAFlux <span className="text-xs align-top bg-[#202c33] px-2 py-1 rounded-full text-[#00a884]">BETA</span></h2>
-                            <p className="text-sm text-gray-500">Send and receive messages without keeping your phone online.<br />Use WAFlux on up to 4 linked devices and 1 phone.</p>
+                    <div className="flex-1 flex flex-col items-center justify-center text-gray-600 z-10 relative overflow-hidden">
+                        {/* Pulsing Radiant Glow */}
+                        <motion.div
+                            animate={{
+                                scale: [1, 1.2, 1],
+                                opacity: [0.15, 0.25, 0.15]
+                            }}
+                            transition={{
+                                duration: 8,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
+                            className="absolute w-[600px] h-[600px] bg-[#00a884] rounded-full blur-[120px] pointer-events-none z-0"
+                        />
+
+                        <div className="w-[350px] text-center relative z-20">
+                            <motion.img
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 0.2, y: 0 }}
+                                transition={{ duration: 1 }}
+                                src="https://static.whatsapp.net/rsrc.php/v3/y6/r/wa669ae.svg"
+                                alt="Welcome"
+                                className="mx-auto mb-8"
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.2 }}
+                            >
+                                <h2 className="text-4xl font-light text-gray-200 mb-4 tracking-tight">
+                                    WBIZZ
+                                    <span className="text-[10px] ml-2 align-top bg-[#00a884]/10 border border-[#00a884]/20 px-2 py-0.5 rounded-full text-[#00a884] font-bold">BETA</span>
+                                </h2>
+                                <p className="text-sm text-gray-500 leading-relaxed">
+                                    Send and receive messages without keeping your phone online.<br />
+                                    <span className="opacity-70">Seamlessly manage your business across all devices.</span>
+                                </p>
+                            </motion.div>
                         </div>
-                        <div className="absolute bottom-10 flex items-center gap-2 text-gray-600 text-xs">
-                            <Zap className="w-3 h-3" /> End-to-end encrypted
+                        <div className="absolute bottom-10 flex items-center gap-2 text-gray-600 text-xs tracking-wide">
+                            <Zap className="w-3 h-3 text-[#00a884]" />
+                            <span className="opacity-50 font-medium uppercase">End-to-end encrypted</span>
                         </div>
                     </div>
                 )}
@@ -550,11 +1194,41 @@ export default function ChatsPage() {
                         exit={{ width: 0, opacity: 0 }}
                         className="bg-[#111b21] border-l border-[#202c33] flex flex-col shrink-0 overflow-hidden"
                     >
-                        <div className="h-16 flex items-center gap-4 px-6 bg-[#202c33] shrink-0">
-                            <button onClick={() => setShowRightSidebar(false)} className="text-gray-400 hover:text-white">
-                                <X className="w-5 h-5" />
-                            </button>
-                            <h3 className="font-medium text-white text-base">Contact Info</h3>
+                        <div className="h-16 flex items-center justify-between px-6 bg-[#202c33] shrink-0">
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => setShowRightSidebar(false)} className="text-gray-400 hover:text-white">
+                                    <X className="w-5 h-5" />
+                                </button>
+                                <h3 className="font-medium text-white text-base">Contact Info</h3>
+                            </div>
+                            <div className="relative z-[120]">
+                                <MoreVertical
+                                    id="sidebar-more"
+                                    onClick={() => setShowChatMenu(!showChatMenu)}
+                                    className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors"
+                                />
+                                {showChatMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-[110]" onClick={() => setShowChatMenu(false)}></div>
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            className="absolute right-0 top-full mt-2 w-56 bg-[#233138] rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.5)] py-2 z-[130] border border-[#303d45] text-gray-300 overflow-hidden"
+                                        >
+                                            <button
+                                                onClick={() => {
+                                                    handleClearChat(selectedChat.id);
+                                                    setShowChatMenu(false);
+                                                }}
+                                                className="w-full text-left px-4 py-3 hover:bg-[#111b21] transition-colors text-sm flex items-center gap-3 text-red-400 group"
+                                            >
+                                                <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> Clear Chat
+                                            </button>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -585,20 +1259,124 @@ export default function ChatsPage() {
                             </div>
 
                             <div className="space-y-3">
-                                <button className="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#202c33] rounded-lg text-red-400 transition-colors text-sm font-medium">
-                                    <LogOut className="w-5 h-5" />
+                                <button onClick={() => handleBlockContact(selectedChat.id)} className="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#202c33] rounded-lg text-red-400 transition-colors text-sm font-medium">
+                                    <Ban className="w-5 h-5" />
                                     Block {selectedChat.name}
                                 </button>
-                                <button className="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#202c33] rounded-lg text-red-400 transition-colors text-sm font-medium">
-                                    <Check className="w-5 h-5" />
+                                <button onClick={() => handleReportContact(selectedChat.id)} className="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#202c33] rounded-lg text-red-400 transition-colors text-sm font-medium">
+                                    <ThumbsDown className="w-5 h-5" />
                                     Report contact
+                                </button>
+                                <button onClick={() => handleDeleteChat(selectedChat.id)} className="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#202c33] rounded-lg text-red-400 transition-colors text-sm font-medium">
+                                    <Trash2 className="w-5 h-5" />
+                                    Delete Chat
                                 </button>
                             </div>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
+            {/* Forwarding Modal */}
+            <AnimatePresence>
+                {isForwarding && (
+                    <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-[#233138] w-full max-w-md rounded-2xl shadow-2xl border border-[#303d45] flex flex-col max-h-[80vh] overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-[#303d45] flex items-center justify-between bg-[#202c33]">
+                                <h3 className="text-xl font-semibold text-white">Forward message to</h3>
+                                <button onClick={() => setIsForwarding(false)} className="text-gray-400 hover:text-white transition-colors">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 bg-[#111b21]">
+                                {chats.map(chat => (
+                                    <button
+                                        key={chat.id}
+                                        onClick={() => handleForwardMessage(chat.id)}
+                                        className="w-full flex items-center gap-4 p-3 hover:bg-[#202c33] rounded-xl transition-colors text-left group"
+                                    >
+                                        <div className="w-12 h-12 rounded-full bg-[#2a3942] flex items-center justify-center text-xl text-white overflow-hidden shadow-inner">
+                                            {chat.avatar?.length > 2 ? <img src={chat.avatar} className="w-full h-full object-cover" /> : chat.avatar || <User className="w-6 h-6 text-gray-500" />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-white truncate group-hover:text-[#00a884] transition-colors">{chat.name}</p>
+                                            <p className="text-sm text-gray-400 truncate">{chat.phone}</p>
+                                        </div>
+                                        <Forward className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
-        </div>
+            {/* Toast Notifications */}
+            <div className="fixed bottom-6 right-6 z-[300] flex flex-col gap-3 pointer-events-none">
+                <AnimatePresence>
+                    {toasts.map(toast => (
+                        <motion.div
+                            key={toast.id}
+                            initial={{ opacity: 0, x: 50, scale: 0.9 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: 20, scale: 0.9 }}
+                            className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border backdrop-blur-md min-w-[280px]
+                                ${toast.type === 'success' ? 'bg-[#00a884]/90 border-[#00a884] text-white' :
+                                    toast.type === 'error' ? 'bg-red-500/90 border-red-500 text-white' :
+                                        toast.type === 'warning' ? 'bg-yellow-500/90 border-yellow-500 text-black' :
+                                            'bg-[#202c33]/95 border-[#303d45] text-white'}`}
+                        >
+                            {toast.type === 'success' && <CheckCircle className="w-5 h-5" />}
+                            {toast.type === 'error' && <XCircle className="w-5 h-5" />}
+                            {toast.type === 'warning' && <AlertCircle className="w-5 h-5" />}
+                            {toast.type === 'info' && <Info className="w-5 h-5" />}
+                            <span className="text-sm font-medium">{toast.message}</span>
+                            <button onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))} className="ml-auto opacity-70 hover:opacity-100 transition-opacity">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
+
+            {/* Confirmation Modal */}
+            <AnimatePresence>
+                {confirmConfig && (
+                    <div className="fixed inset-0 z-[400] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="bg-[#233138] w-full max-w-sm rounded-2xl shadow-2xl border border-[#303d45] p-6 space-y-6"
+                        >
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold text-white">{confirmConfig.title}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">{confirmConfig.message}</p>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => setConfirmConfig(null)}
+                                    className="flex-1 px-4 py-2.5 rounded-lg text-gray-300 hover:bg-white/5 transition-colors font-medium border border-[#303d45]"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        confirmConfig.onConfirm();
+                                        setConfirmConfig(null);
+                                    }}
+                                    className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors font-bold shadow-lg shadow-red-500/20"
+                                >
+                                    Confirm
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div >
     );
 }

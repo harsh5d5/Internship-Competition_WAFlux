@@ -31,9 +31,8 @@ const TEMPLATES = [
         image: "https://example.com/diwali-banner.jpg" // Placeholder
     },
     {
-        id: "welcome_msg",
         name: "Welcome Message",
-        body: "Hello! 👋\n\nWelcome to WAFlux. We are excited to have you on board. Let us know if you have any questions!",
+        body: "Hello! 👋\n\nWelcome to WBIZZ. We are excited to have you on board. Let us know if you have any questions!",
         image: ""
     },
     {

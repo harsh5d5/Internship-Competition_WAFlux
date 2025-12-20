@@ -78,3 +78,42 @@ body {
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
+
+/* React Flow Edge Animation */
+@keyframes edge-pulse {
+  from {
+    stroke-dashoffset: 20;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.react-flow__edge-path.animated {
+  stroke-dasharray: 5;
+  stroke-width: 3;
+  animation: edge-pulse 1s linear infinite !important;
+  stroke: #02C173;
+  filter: drop-shadow(0 0 8px rgba(2, 193, 115, 0.6));
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #ffffff !important;
+  stroke-width: 4;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(17, 27, 33, 0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.glass-card {
+  background: rgba(31, 44, 52, 0.6) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}

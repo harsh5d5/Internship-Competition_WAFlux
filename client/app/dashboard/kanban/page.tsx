@@ -15,17 +15,26 @@ type Lead = {
     avatar?: string;
 };
 
-// Column Config
-const columns = [
-    { id: "new", title: "New Leads", color: "bg-blue-500" },
-    { id: "interested", title: "Interested", color: "bg-yellow-500" },
-    { id: "negotiating", title: "Negotiating", color: "bg-purple-500" },
-    { id: "closed", title: "Closed", color: "bg-[#02C173]" },
+// Initial Column Config
+const INITIAL_COLUMNS = [
+    { id: "new", title: "New Leads", color: "bg-blue-500", limit: 10 },
+    { id: "interested", title: "Interested", color: "bg-yellow-500", limit: 5 },
+    { id: "negotiating", title: "Negotiating", color: "bg-purple-500", limit: 5 },
+    { id: "closed", title: "Closed", color: "bg-[#02C173]", limit: 0 },
 ];
+
+import { Edit2, Settings, Trash, AlertCircle } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 export default function KanbanPage() {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
+    const [columns, setColumns] = useState(INITIAL_COLUMNS);
+    const [activeColMenuId, setActiveColMenuId] = useState<string | null>(null);
+    const [editingColId, setEditingColId] = useState<string | null>(null);
+    const [tempColTitle, setTempColTitle] = useState("");
+    const [editingLimitColId, setEditingLimitColId] = useState<string | null>(null);
+    const [tempLimitValue, setTempLimitValue] = useState("");
 
     // Dummy Data for visualization
     const DUMMY_LEADS: Lead[] = [
@@ -198,6 +207,58 @@ export default function KanbanPage() {
         }
     };
 
+    const handleRenameColumn = (colId: string, currentTitle: string) => {
+        setEditingColId(colId);
+        setTempColTitle(currentTitle);
+        setActiveColMenuId(null);
+    };
+
+    const saveColumnTitle = () => {
+        if (editingColId && tempColTitle.trim()) {
+            setColumns(prev => prev.map(c => c.id === editingColId ? { ...c, title: tempColTitle.trim() } : c));
+        }
+        setEditingColId(null);
+        setTempColTitle("");
+    };
+
+    const handleSetLimit = (colId: string, currentLimit: number) => {
+        setEditingLimitColId(colId);
+        setTempLimitValue(currentLimit.toString());
+        setActiveColMenuId(null);
+    };
+
+    const saveLimit = () => {
+        if (editingLimitColId) {
+            const limit = parseInt(tempLimitValue);
+            setColumns(prev => prev.map(c => c.id === editingLimitColId ? { ...c, limit: isNaN(limit) ? 0 : limit } : c));
+        }
+        setEditingLimitColId(null);
+        setTempLimitValue("");
+    };
+
+    const handleClearColumn = async (colId: string) => {
+        if (!confirm(`Are you sure you want to clear all leads in this column? This will delete them forever.`)) return;
+
+        const columnLeads = getLeadsByStatus(colId);
+        const token = localStorage.getItem("access_token");
+
+        // Optimistic UI
+        setLeads(prev => prev.filter(l => !columnLeads.some(cl => cl.id === l.id)));
+
+        // Batch delete on backend (ideally we should have a batch endpoint but for now we loop)
+        try {
+            await Promise.all(columnLeads.map(lead =>
+                fetch(`http://localhost:8000/api/leads/${lead.id}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                })
+            ));
+        } catch (error) {
+            console.error("Batch delete failed", error);
+        }
+        setActiveColMenuId(null);
+    };
+
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col relative">
             <div className="flex items-center justify-between mb-6">
@@ -225,16 +286,103 @@ export default function KanbanPage() {
                             onDrop={(e) => handleDrop(e, col.id)}
                         >
                             {/* Column Header */}
-                            <div className={`p-4 border-t-4 ${col.color.replace('bg-', 'border-')} border-b border-gray-200 dark:border-white/5 flex flex-col gap-2 bg-white dark:bg-[#111b21] transition-colors`}>
+                            <div className={`p-4 border-t-4 ${col.color.replace('bg-', 'border-')} border-b border-gray-200 dark:border-white/5 flex flex-col gap-2 bg-white dark:bg-[#111b21] transition-colors relative`}>
                                 <div className="flex items-center justify-between">
-                                    <h3 className="font-bold text-gray-900 dark:text-white tracking-wide text-lg">{col.title}</h3>
-                                    <MoreHorizontal className="w-5 h-5 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-black dark:hover:text-white" />
+                                    <div className="flex items-center gap-2 flex-1">
+                                        {editingColId === col.id ? (
+                                            <input
+                                                autoFocus
+                                                type="text"
+                                                className="bg-gray-100 dark:bg-white/10 border-none outline-none rounded px-2 py-0.5 font-bold text-gray-900 dark:text-white text-lg w-full"
+                                                value={tempColTitle}
+                                                onChange={(e) => setTempColTitle(e.target.value)}
+                                                onBlur={saveColumnTitle}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') saveColumnTitle();
+                                                    if (e.key === 'Escape') setEditingColId(null);
+                                                }}
+                                            />
+                                        ) : (
+                                            <h3 className="font-bold text-gray-900 dark:text-white tracking-wide text-lg truncate max-w-[200px]">{col.title}</h3>
+                                        )}
+                                        {col.limit > 0 && getLeadsByStatus(col.id).length >= col.limit && (
+                                            <AlertCircle className="w-4 h-4 text-red-500 animate-pulse shrink-0" />
+                                        )}
+                                    </div>
+                                    <div className="relative">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveColMenuId(activeColMenuId === col.id ? null : col.id);
+                                            }}
+                                            className="p-1 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors"
+                                        >
+                                            <MoreHorizontal className="w-5 h-5 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-black dark:hover:text-white" />
+                                        </button>
+
+                                        <AnimatePresence>
+                                            {activeColMenuId === col.id && (
+                                                <>
+                                                    <div className="fixed inset-0 z-40" onClick={() => setActiveColMenuId(null)}></div>
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                        className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#1f2c34] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl z-50 py-2 py-2 overflow-hidden"
+                                                    >
+                                                        <button
+                                                            onClick={() => handleRenameColumn(col.id, col.title)}
+                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-black/20 text-sm flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors"
+                                                        >
+                                                            <Edit2 className="w-4 h-4" /> Rename Column
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleSetLimit(col.id, col.limit)}
+                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-black/20 text-sm flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors"
+                                                        >
+                                                            <Settings className="w-4 h-4" /> Set Lead Limit
+                                                        </button>
+                                                        <div className="h-px bg-gray-100 dark:bg-white/5 my-1"></div>
+                                                        <button
+                                                            onClick={() => handleClearColumn(col.id)}
+                                                            className="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-500/10 text-sm flex items-center gap-2 text-red-500 transition-colors"
+                                                        >
+                                                            <Trash className="w-4 h-4" /> Clear Column
+                                                        </button>
+                                                    </motion.div>
+                                                </>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 </div>
                                 <div className="flex items-center justify-between text-xs font-medium">
-                                    <span className="text-gray-500 dark:text-gray-400">
-                                        {getLeadsByStatus(col.id).length} Leads
-                                    </span>
-                                    <span className="text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 py-1 rounded">
+                                    <div className="flex items-center gap-1.5 overflow-hidden">
+                                        <div
+                                            onClick={() => handleSetLimit(col.id, col.limit)}
+                                            className={`px-2 py-0.5 rounded-full text-[10px] cursor-pointer transition-colors flex items-center gap-1 ${getLeadsByStatus(col.id).length > col.limit && col.limit > 0 ? 'bg-red-500/20 text-red-500' : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/20'}`}
+                                        >
+                                            <span className="shrink-0">{getLeadsByStatus(col.id).length} /</span>
+                                            {editingLimitColId === col.id ? (
+                                                <input
+                                                    autoFocus
+                                                    type="text"
+                                                    className="bg-white dark:bg-[#1f2c34] border-none outline-none rounded px-1 w-8 text-center font-bold text-gray-900 dark:text-white"
+                                                    value={tempLimitValue}
+                                                    onChange={(e) => setTempLimitValue(e.target.value.replace(/[^0-9]/g, ''))}
+                                                    onBlur={saveLimit}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') saveLimit();
+                                                        if (e.key === 'Escape') setEditingLimitColId(null);
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span className="font-bold">{col.limit > 0 ? col.limit : '∞'}</span>
+                                            )}
+                                            <span className="shrink-0">Leads</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 py-1 rounded tabular-nums">
                                         ${getLeadsByStatus(col.id).reduce((sum, lead) => {
                                             const val = parseFloat(lead.value.replace(/[^0-9.-]+/g, ""));
                                             return sum + (isNaN(val) ? 0 : val);

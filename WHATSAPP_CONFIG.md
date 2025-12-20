@@ -1,8 +1,8 @@
 # WhatsApp API Configuration Feature
 
 ## Usage Overview
-This feature allows users to connect their own WhatsApp Business numbers to the WAFlux platform. 
-**Important:** We (WAFlux) do not provide these credentials. The user must obtain them from the Meta (Facebook) Developer Portal.
+This feature allows users to connect their own WhatsApp Business numbers to the WBIZZ platform. 
+**Important:** We (WBIZZ) do not provide these credentials. The user must obtain them from the Meta (Facebook) Developer Portal.
 
 ---
 
@@ -17,7 +17,7 @@ This feature allows users to connect their own WhatsApp Business numbers to the 
 *   **Analogy:** The **Landlord**. One landlord (Business ID) can own many apartments (Phone Numbers). This ensures billing and limits are applied to the correct company.
 
 ### 3. Permanent Access Token
-*   **Definition:** The digital "password" that grants WAFlux permission to send messages on behalf of the user.
+*   **Definition:** The digital "password" that grants WBIZZ permission to send messages on behalf of the user.
 *   **Critical Warning:** Users often copy the *Temporary Token* (expires in 24h). They **must** generate a *System User Token* (Permanent) for long-term connection.
 *   **Analogy:** The **House Key 🔑**. 
     *   **Temporary Token** = Guest key (stops working tomorrow).
@@ -28,7 +28,7 @@ This feature allows users to connect their own WhatsApp Business numbers to the 
 ## 🏦 The Ownership Concept (Bank Account Analogy)
 If a user asks why *they* have to provide these keys instead of us giving them:
 
-*   Think of **WAFlux** like **PayPal** or a generic Payment App.
+*   Think of **WBIZZ** like **PayPal** or a generic Payment App.
 *   Think of the **WhatsApp Account** like the user's **Bank Account**.
 *   We provide the *technology* to make transactions (send messages), but we don't own the money (the number).
 *   The User must go to their "Bank" (Meta), get their credentials, and enter them into our app to authorize us to work for them.
