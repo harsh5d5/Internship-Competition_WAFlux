@@ -1,3 +1,4 @@
+import os
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
@@ -5,7 +6,7 @@ from jose import JWTError, jwt
 
 # --- Configuration ---
 # You should generate a random secret key for production: openssl rand -hex 32
-SECRET_KEY = "super_secret_key_for_dev_only_change_this_for_prod"
+SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_key_for_dev_only_change_this_for_prod")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

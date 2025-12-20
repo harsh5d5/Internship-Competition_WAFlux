@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-
-
+import ChatAssistant from "@/components/ChatAssistant";
 
 const ibmPlexSans = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
@@ -18,7 +17,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WhatsApp Business Dashboard",
+  title: "WBIZZ | Multi-Channel Marketing Platform",
   description: "Modern WhatsApp Business Management Dashboard",
 };
 
@@ -40,6 +39,7 @@ export default function RootLayout({
         >
 
           {children}
+          <ChatAssistant />
 
         </ThemeProvider>
       </body>

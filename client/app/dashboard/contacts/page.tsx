@@ -262,135 +262,137 @@ export default function ContactsPage() {
 
             {/* List / Table */}
             <div className="flex-1 overflow-hidden rounded-[20px] bg-white dark:bg-[#0b141a] shadow ring-1 ring-gray-200 dark:ring-white/5 transition-colors flex flex-col">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-white/5">
-                        <thead className="bg-gray-50 dark:bg-white/5 transition-colors">
-                            <tr>
-                                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">Name</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Phone</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Last Active</th>
-                                <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                                    <span className="sr-only">Actions</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-white/5 bg-white dark:bg-[#0b141a] transition-colors">
-                            {filteredContacts.map((person) => (
-                                <motion.tr
-                                    key={person.id}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    whileHover={{ backgroundColor: "rgba(100,100,100,0.05)" }}
-                                    className="cursor-pointer"
-                                >
-                                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
-                                        <div className="flex items-center gap-3">
-                                            {person.avatar && !imageErrorIds.has(person.id) ? (
-                                                <img
-                                                    src={person.avatar}
-                                                    alt={person.name}
-                                                    className="h-9 w-9 rounded-full object-cover"
-                                                    onError={() => setImageErrorIds(prev => new Set(prev).add(person.id))}
-                                                />
-                                            ) : (
-                                                <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${getAvatarColor(person.name)}`}>
-                                                    {person.name.charAt(0).toUpperCase()}
-                                                </div>
-                                            )}
-                                            <div>
-                                                <div className="font-semibold text-gray-900 dark:text-white">{person.name}</div>
+                <div className="overflow-x-auto no-scrollbar">
+                    <div className="inline-block min-w-full align-middle">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-white/5">
+                            <thead className="bg-gray-50 dark:bg-white/5 transition-colors">
+                                <tr>
+                                    <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">Name</th>
+                                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Phone</th>
+                                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
+                                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Last Active</th>
+                                    <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                                        <span className="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200 dark:divide-white/5 bg-white dark:bg-[#0b141a] transition-colors">
+                                {filteredContacts.map((person) => (
+                                    <motion.tr
+                                        key={person.id}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        whileHover={{ backgroundColor: "rgba(100,100,100,0.05)" }}
+                                        className="cursor-pointer"
+                                    >
+                                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
+                                            <div className="flex items-center gap-3">
+                                                {person.avatar && !imageErrorIds.has(person.id) ? (
+                                                    <img
+                                                        src={person.avatar}
+                                                        alt={person.name}
+                                                        className="h-9 w-9 rounded-full object-cover"
+                                                        onError={() => setImageErrorIds(prev => new Set(prev).add(person.id))}
+                                                    />
+                                                ) : (
+                                                    <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${getAvatarColor(person.name)}`}>
+                                                        {person.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div className="font-semibold text-gray-900 dark:text-white">{person.name}</div>
 
-                                                <div className="text-xs text-gray-500">{person.company}</div>
-                                                <div className="flex gap-1 mt-0.5">
-                                                    {person.tags?.map(tag => (
-                                                        <span key={tag} className="inline-flex items-center rounded-full bg-gray-100 dark:bg-white/5 px-2 py-0.5 text-[10px] uppercase font-medium text-gray-600 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-white/10 transition-colors">
-                                                            {tag}
-                                                        </span>
-                                                    ))}
+                                                    <div className="text-xs text-gray-500">{person.company}</div>
+                                                    <div className="flex gap-1 mt-0.5">
+                                                        {person.tags?.map(tag => (
+                                                            <span key={tag} className="inline-flex items-center rounded-full bg-gray-100 dark:bg-white/5 px-2 py-0.5 text-[10px] uppercase font-medium text-gray-600 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-white/10 transition-colors">
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">
-                                        {person.phone || "—"}
-                                    </td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm">
-                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset capitalize
+                                        </td>
+                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">
+                                            {person.phone || "—"}
+                                        </td>
+                                        <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset capitalize
                         ${person.status === 'active' || person.status === 'new' ? 'bg-[#02C173]/10 text-[#02C173] ring-[#02C173]/20' :
-                                                person.status === 'blocked' ? 'bg-red-400/10 text-red-400 ring-red-400/20' :
-                                                    'bg-blue-400/10 text-blue-400 ring-blue-400/20'}`}>
-                                            {person.status}
-                                        </span>
-                                    </td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{person.last_contact}</td>
-                                    <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                        <div className="relative">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setActiveActionId(activeActionId === person.id ? null : person.id);
-                                                }}
-                                                className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
-                                            >
-                                                <MoreHorizontal className="h-5 w-5" />
-                                            </button>
+                                                    person.status === 'blocked' ? 'bg-red-400/10 text-red-400 ring-red-400/20' :
+                                                        'bg-blue-400/10 text-blue-400 ring-blue-400/20'}`}>
+                                                {person.status}
+                                            </span>
+                                        </td>
+                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{person.last_contact}</td>
+                                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                            <div className="relative">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setActiveActionId(activeActionId === person.id ? null : person.id);
+                                                    }}
+                                                    className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
+                                                >
+                                                    <MoreHorizontal className="h-5 w-5" />
+                                                </button>
 
-                                            {/* Action Dropdown */}
-                                            <AnimatePresence>
-                                                {activeActionId === person.id && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                        exit={{ opacity: 0, scale: 0.95 }}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        className="absolute right-0 top-8 z-50 w-36 rounded-lg bg-white dark:bg-[#1f2c34] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100 dark:border-white/5"
-                                                    >
-                                                        <div className="py-1">
-                                                            <button
-                                                                className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5"
-                                                                onClick={() => {
-                                                                    openEditModal(person);
-                                                                    setActiveActionId(null);
-                                                                }}
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5"
-                                                                onClick={() => {
-                                                                    router.push(`/dashboard/chats?chatId=${person.id}`);
-                                                                    setActiveActionId(null);
-                                                                }}
-                                                            >
-                                                                Message
-                                                            </button>
-                                                            <button
-                                                                className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
-                                                                onClick={() => {
-                                                                    handleDeleteContact(person.id, person.name);
-                                                                    setActiveActionId(null);
-                                                                }}
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-                                    </td>
-                                </motion.tr>
-                            ))}
-                            {filteredContacts.length === 0 && !isLoading && (
-                                <tr>
-                                    <td colSpan={5} className="py-10 text-center text-gray-500">
-                                        No contacts found matching "{searchQuery}" {statusFilter !== 'all' && `with status "${statusFilter}"`}
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                                {/* Action Dropdown */}
+                                                <AnimatePresence>
+                                                    {activeActionId === person.id && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                            exit={{ opacity: 0, scale: 0.95 }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="absolute right-0 top-8 z-50 w-36 rounded-lg bg-white dark:bg-[#1f2c34] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100 dark:border-white/5"
+                                                        >
+                                                            <div className="py-1">
+                                                                <button
+                                                                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5"
+                                                                    onClick={() => {
+                                                                        openEditModal(person);
+                                                                        setActiveActionId(null);
+                                                                    }}
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5"
+                                                                    onClick={() => {
+                                                                        router.push(`/dashboard/chats?chatId=${person.id}`);
+                                                                        setActiveActionId(null);
+                                                                    }}
+                                                                >
+                                                                    Message
+                                                                </button>
+                                                                <button
+                                                                    className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
+                                                                    onClick={() => {
+                                                                        handleDeleteContact(person.id, person.name);
+                                                                        setActiveActionId(null);
+                                                                    }}
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        </td>
+                                    </motion.tr>
+                                ))}
+                                {filteredContacts.length === 0 && !isLoading && (
+                                    <tr>
+                                        <td colSpan={5} className="py-10 text-center text-gray-500">
+                                            No contacts found matching "{searchQuery}" {statusFilter !== 'all' && `with status "${statusFilter}"`}
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

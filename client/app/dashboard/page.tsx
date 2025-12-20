@@ -137,13 +137,13 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {stats.map((stat) => (
                     <motion.div
                         key={stat.name}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="relative overflow-hidden rounded-[20px] bg-white dark:bg-[#0b141a] px-4 py-5 shadow-sm border border-gray-200 dark:border-white/5 sm:p-6 transition-all hover:shadow-md group"
+                        className="relative overflow-hidden rounded-[20px] bg-white/70 dark:bg-[#0b141a]/60 backdrop-blur-xl px-4 py-5 shadow-xl border border-gray-200/50 dark:border-white/10 sm:p-6 transition-all hover:shadow-2xl group"
                     >
                         {/* Gradient Glow Effect on Hover */}
                         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#02C173]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -156,9 +156,9 @@ export default function DashboardPage() {
                                     }`}>
                                     <stat.icon className="h-6 w-6" aria-hidden="true" />
                                 </div>
-                                <div className="ml-5">
-                                    <p className="truncate text-sm font-medium text-gray-500 dark:text-gray-400">{stat.name}</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stat.value}</p>
+                                <div className="ml-3 sm:ml-5">
+                                    <p className="truncate text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">{stat.name}</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-0.5 sm:mt-1">{stat.value}</p>
                                 </div>
                             </div>
 
@@ -183,7 +183,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* 1. Live Activity Feed (Span 1) */}
-                <div className="overflow-hidden rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 h-fit transition-colors flex flex-col">
+                <div className="overflow-hidden rounded-[24px] bg-white/70 dark:bg-[#0b141a]/60 backdrop-blur-xl shadow-xl border border-gray-200/50 dark:border-white/10 h-fit transition-colors flex flex-col">
                     <div className="p-6 pb-2">
                         <h3 className="text-base font-semibold leading-6 text-gray-900 dark:text-white">Live Activity Feed</h3>
                     </div>
@@ -264,8 +264,8 @@ export default function DashboardPage() {
                 <div className="lg:col-span-2 space-y-6">
 
                     {/* Top: Donut Chart Status */}
-                    <div className="rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 p-6 flex flex-col sm:flex-row items-center justify-between transition-colors">
-                        <div className="w-full sm:w-1/2">
+                    <div className="rounded-[24px] bg-white/70 dark:bg-[#0b141a]/60 backdrop-blur-xl shadow-xl border border-gray-200/50 dark:border-white/10 p-6 flex flex-col md:flex-row items-center justify-between transition-colors">
+                        <div className="w-full md:w-1/2">
                             <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Message Status Breakdown</h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Real-time delivery statistics.</p>
 
@@ -284,7 +284,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Donut Chart */}
-                        <div className="w-full sm:w-1/2 h-[200px] mt-6 sm:mt-0">
+                        <div className="w-full md:w-1/2 h-[180px] sm:h-[200px] mt-6 md:mt-0">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -311,7 +311,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Bottom: Area Chart Volume */}
-                    <div className="rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 p-6 transition-colors">
+                    <div className="rounded-[24px] bg-white/70 dark:bg-[#0b141a]/60 backdrop-blur-xl shadow-xl border border-gray-200/50 dark:border-white/10 p-6 transition-colors">
                         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-6">Activity Volume (7 Days)</h3>
                         <div className="h-[250px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
@@ -361,7 +361,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Bottom 2: Audience Engagement Bar Chart */}
-                    <div className="rounded-[24px] bg-white dark:bg-[#0b141a] shadow border border-gray-200 dark:border-white/5 p-6 transition-colors">
+                    <div className="rounded-[24px] bg-white/70 dark:bg-[#0b141a]/60 backdrop-blur-xl shadow-xl border border-gray-200/50 dark:border-white/10 p-6 transition-colors">
                         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Audience Engagement by Hour</h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Best times to send broadcasts.</p>
                         <div className="h-[200px] w-full">

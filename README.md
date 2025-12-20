@@ -98,8 +98,11 @@ We are migrating and improving an existing WhatsApp Business Dashboard from vani
 1. **GitHub Repository**: Well-structured, clean code with meaningful commits.
 2. **README.md**: Setup instructions, env variables, tech stack.
 3. **Live Demo**: Deployed on Vercel/Netlify.
-4. **Documentation**: Component docs and design decisions.
+4. **Documentation**: Detailed guide on features and design decisions. See the **[Documentation Folder](./docs/README.md)** for a simple feature guide.
 
 ## 🚀 Getting Started
+
+To understand the platform and its capabilities, we recommend starting with our:
+👉 **[WBIZZ Feature Guide](./docs/FEATURES_GUIDE.md)**
 
 *(Instructions to be added once the project is initialized)*

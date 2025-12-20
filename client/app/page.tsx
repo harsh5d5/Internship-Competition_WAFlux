@@ -1,11 +1,13 @@
 import HeroSection from "@/components/HeroSection";
-import FeaturesBento from "@/components/FeaturesBento";
+import AutomationWorkflow from "@/components/AutomationWorkflow";
+import Footer from "@/components/Footer";
 
 export default function Home() {
-  return (
-    <main>
-      <HeroSection />
-      <FeaturesBento />
-    </main>
-  );
+    return (
+        <main>
+            <HeroSection />
+            <AutomationWorkflow />
+            <Footer />
+        </main>
+    );
 }

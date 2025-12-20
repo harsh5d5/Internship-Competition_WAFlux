@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
 import ReactFlow, {
     addEdge,
     Background,
@@ -14,7 +15,7 @@ import ReactFlow, {
     Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { ArrowLeft, Save, Play, Plus, MessageSquare, Clock, FileText, Image as ImageIcon, StickyNote, Zap, Split, ChevronRight, Layout, Sparkles, Bot, Palette, Trash2, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, Save, Play, Plus, MessageSquare, Clock, FileText, Image as ImageIcon, StickyNote, Zap, Split, ChevronRight, Layout, Sparkles, Bot, Palette, Trash2, RotateCcw, X, Menu, ChevronLeft } from "lucide-react";
 import Link from 'next/link';
 
 // --- Custom Nodes ---
@@ -483,6 +484,8 @@ const initialEdges = [
     { id: 'e3-4', source: '3', sourceHandle: 'yes', target: '4', animated: true, label: '450 clicks', labelStyle: { fill: '#02C173', fontWeight: 900, fontSize: 10 } },
 ];
 
+import Aurora from '@/components/ui/Aurora';
+
 export default function AutomationPage() {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -496,6 +499,7 @@ export default function AutomationPage() {
     const [flowId, setFlowId] = useState<string | null>(null);
     const [flowName, setFlowName] = useState('Welcome Flow');
     const [isEditingName, setIsEditingName] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const deleteNode = useCallback((id: string) => {
         setNodes((nds) => nds.filter((node) => node.id !== id));
@@ -775,31 +779,47 @@ export default function AutomationPage() {
     };
 
     return (
-        <div className="h-screen bg-white dark:bg-[#060707] flex flex-col transition-colors">
+        <div className="relative h-screen bg-white dark:bg-[#060707] flex flex-col transition-colors overflow-hidden">
+            {/* Aurora Background */}
+            <div className="absolute inset-0 pointer-events-none z-0 opacity-30 dark:opacity-50">
+                <Aurora
+                    colorStops={["#02C173", "#128C7E", "#02C173"]}
+                    blend={0.5}
+                    amplitude={1.2}
+                    speed={0.4}
+                />
+            </div>
+
             {/* Header */}
-            <div className="h-16 border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-6 bg-white dark:bg-[#111b21] z-10 transition-colors shadow-sm">
-                <div className="flex items-center gap-4">
-                    <Link href="/dashboard" className="p-2 -ml-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-black dark:hover:text-white transition-all">
+            <div className="h-16 border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-6 bg-white/70 dark:bg-[#111b21]/70 backdrop-blur-xl z-10 transition-colors shadow-sm">
+                <div className="flex items-center gap-2 lg:gap-4">
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="lg:hidden p-2 -ml-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg"
+                    >
+                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                    <Link href="/dashboard" className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-black dark:hover:text-white transition-all">
                         <ArrowLeft size={20} />
                     </Link>
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#02C173] animate-pulse"></span>
+                        <h1 className="text-sm lg:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <span className="hidden sm:inline-block w-2 h-2 rounded-full bg-[#02C173] animate-pulse"></span>
                             {isEditingName ? (
                                 <input
                                     autoFocus
-                                    className="bg-transparent border-b border-[#02C173] outline-none"
+                                    className="bg-transparent border-b border-[#02C173] outline-none w-24 sm:w-auto"
                                     value={flowName}
                                     onChange={(e) => setFlowName(e.target.value)}
                                     onBlur={() => setIsEditingName(false)}
                                     onKeyDown={(e) => e.key === 'Enter' && setIsEditingName(false)}
                                 />
                             ) : (
-                                <span onClick={() => setIsEditingName(true)} className="cursor-pointer hover:text-white/80 transition-colors">
+                                <span onClick={() => setIsEditingName(true)} className="cursor-pointer hover:text-white/80 transition-colors truncate max-w-[100px] sm:max-w-none">
                                     {flowName}
                                 </span>
                             )}
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${flowStatus === 'Published' ? 'bg-[#02C173]/10 text-[#02C173] border-[#02C173]/20' : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-yellow-500/20'}`}>
+                            <span className={`px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider border shrink-0 ${flowStatus === 'Published' ? 'bg-[#02C173]/10 text-[#02C173] border-[#02C173]/20' : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-yellow-500/20'}`}>
                                 {flowStatus}
                             </span>
                         </h1>
@@ -809,42 +829,43 @@ export default function AutomationPage() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="hidden md:flex flex-col items-end mr-4">
-                        <span className={`text-[10px] font-semibold uppercase tracking-widest ${saveStatus === 'All changes saved' ? 'text-[#02C173]' : 'text-yellow-500'}`}>
-                            {saveStatus}
-                        </span>
-                    </div>
-                    <button onClick={createNewFlow} className="p-2 text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all" title="Create New Flow">
-                        <Plus size={20} />
+                <div className="flex items-center gap-1.5 sm:gap-3">
+                    <button onClick={createNewFlow} className="p-1.5 sm:p-2 text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all" title="Create New Flow">
+                        <Plus size={18} />
                     </button>
-                    <button onClick={resetCanvas} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all" title="Reset Engine">
-                        <RotateCcw size={20} />
+                    <button onClick={resetCanvas} className="p-1.5 sm:p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all" title="Reset Engine">
+                        <RotateCcw size={18} />
                     </button>
                     <button
                         onClick={() => setIsSimOpen(!isSimOpen)}
-                        className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border transition-all ${isSimOpen ? 'bg-indigo-500 text-white border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.4)]' : 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20 hover:bg-indigo-500 hover:text-white'}`}
+                        className={`flex items-center gap-2 px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-lg border transition-all ${isSimOpen ? 'bg-indigo-500 text-white border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.4)]' : 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20 hover:bg-indigo-500 hover:text-white'}`}
                     >
-                        <Bot size={16} /> {isSimOpen ? 'Exit Simulator' : 'Test Simulator'}
+                        <Bot size={16} /> <span className="hidden sm:inline">{isSimOpen ? 'Exit Simulator' : 'Test Simulator'}</span>
                     </button>
                     <button
                         onClick={handlePublish}
                         disabled={flowStatus === 'Published'}
-                        className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all transform hover:-translate-y-0.5 ${flowStatus === 'Published' ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed' : 'text-black bg-[#02C173] hover:bg-[#02a965] shadow-[0_0_15px_rgba(2,193,115,0.4)]'}`}
+                        className={`flex items-center gap-2 px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all transform hover:-translate-y-0.5 ${flowStatus === 'Published' ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed' : 'text-black bg-[#02C173] hover:bg-[#02a965] shadow-[0_0_15px_rgba(2,193,115,0.4)]'}`}
                     >
-                        <Play size={16} /> {flowStatus === 'Published' ? 'Published' : 'Publish Flow'}
+                        <Play size={16} /> <span className="hidden sm:inline">{flowStatus === 'Published' ? 'Published' : 'Publish Flow'}</span>
                     </button>
                 </div>
             </div>
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar */}
-                <div className="w-80 border-r border-white/10 bg-[#060707] p-6 space-y-8 transition-colors z-20 overflow-y-auto">
-                    <div>
-                        <h3 className="text-[11px] font-semibold text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                <div className={`
+                    fixed lg:static inset-y-0 left-0 w-80 border-r border-white/10 bg-[#060707] p-6 space-y-8 transition-all duration-300 z-[60] lg:z-20 overflow-y-auto
+                    ${isSidebarOpen ? 'translate-x-0 bubble-shadow' : '-translate-x-full lg:translate-x-0'}
+                `}>
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-[11px] font-semibold text-white uppercase tracking-[0.3em] flex items-center gap-3">
                             <div className="w-1.5 h-6 bg-[#02C173] rounded-full shadow-[0_0_10px_#02C173]" />
                             Canvas Toolbox
                         </h3>
+                        <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-gray-400 hover:text-white transition-colors">
+                            <X size={20} />
+                        </button>
                     </div>
 
                     <div className="space-y-4">
@@ -860,7 +881,10 @@ export default function AutomationPage() {
                             <div
                                 key={item.id}
                                 className="group p-4 bg-white/5 border border-white/5 rounded-2xl cursor-pointer hover:border-white/20 hover:bg-white/10 transition-all duration-300"
-                                onClick={() => addNode(item.id)}
+                                onClick={() => {
+                                    addNode(item.id);
+                                    if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                                }}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`w-12 h-12 flex items-center justify-center ${item.bg} ${item.color} rounded-xl group-hover:bg-opacity-30 transition-all`}>
@@ -875,6 +899,19 @@ export default function AutomationPage() {
                         ))}
                     </div>
                 </div>
+
+                {/* Mobile Sidebar Overlay */}
+                <AnimatePresence>
+                    {isSidebarOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsSidebarOpen(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
+                        />
+                    )}
+                </AnimatePresence>
 
                 {/* ReactFlow Canvas */}
                 <div className="flex-1 relative">
@@ -898,89 +935,100 @@ export default function AutomationPage() {
                         className="bg-[#0b141a]"
                     >
                         <Background color="#1a1a1a" gap={20} size={1} />
-                        <Controls className="!bg-[#111b21] !border-white/10 !fill-white" />
+                        <Controls
+                            className="!bg-[#111b21]/80 !border-white/10 !fill-[#02C173] [&_button]:!bg-transparent [&_button]:!border-white/5 [&_button:hover]:!bg-white/5 [&_svg]:!fill-[#02C173] [&_svg]:!w-3 [&_svg]:!h-3"
+                        />
+                    </ReactFlow>
 
-                        {/* Simulation UI */}
+                    {/* Simulation UI - Moved outside ReactFlow to prevent zooming/panning issues */}
+                    <AnimatePresence>
                         {isSimOpen && (
-                            <div className="absolute right-6 top-6 bottom-32 w-96 bg-[#111b21] border border-white/10 rounded-3xl shadow-3xl z-[60] flex flex-col overflow-hidden animate-in slide-in-from-right-10 duration-300">
-                                <div className="p-4 bg-indigo-500/10 border-b border-white/5 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center text-white">
-                                            <Bot size={20} />
-                                        </div>
-                                        <div>
-                                            <span className="block text-sm font-bold text-white">Flow Simulator</span>
-                                            <span className="text-[10px] text-[#02C173] font-black uppercase tracking-widest flex items-center gap-1">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-[#02C173] animate-pulse" />
-                                                Live Tracing
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={resetSimulation}
-                                            className="p-2 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                                            title="Clear Chat History"
-                                        >
-                                            <RotateCcw size={18} />
-                                        </button>
-                                        <button onClick={() => setIsSimOpen(false)} className="p-2 text-white/40 hover:text-white transition-colors">
-                                            <X size={20} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0b141a] relative">
-                                    {/* Subtle CSS Pattern for Background */}
-                                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-
-                                    <div className="relative z-10 space-y-4">
-                                        {simMessages.length === 0 && (
-                                            <div className="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl text-[11px] text-indigo-200/70 leading-relaxed text-center font-medium">
-                                                Type <span className="text-white font-bold">"START"</span> to begin the automation trace.
+                            <div className="absolute inset-0 sm:inset-auto sm:right-6 sm:top-6 sm:bottom-32 w-full sm:w-96 bg-[#111b21] border sm:border border-white/10 sm:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] z-[100] flex flex-col overflow-hidden">
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    className="flex flex-col h-full"
+                                >
+                                    <div className="p-4 bg-indigo-500/10 border-b border-white/5 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center text-white">
+                                                <Bot size={20} />
                                             </div>
-                                        )}
-                                        {simMessages.map((msg, i) => (
-                                            <div key={i} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                                                <div className={`max-w-[85%] p-3 rounded-2xl text-xs font-medium shadow-2xl relative ${msg.sender === 'me' ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-white rounded-tl-none border border-white/5'}`}>
-                                                    {msg.text}
-                                                    <div className="text-[9px] text-white/40 mt-1 text-right flex items-center justify-end gap-1">
-                                                        {msg.time}
-                                                        {msg.sender === 'me' && <span className="text-[#53bdeb] text-[10px]">✓✓</span>}
+                                            <div>
+                                                <span className="block text-sm font-bold text-white">Flow Simulator</span>
+                                                <span className="text-[10px] text-[#02C173] font-black uppercase tracking-widest flex items-center gap-1">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-[#02C173] animate-pulse" />
+                                                    Live Tracing
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={resetSimulation}
+                                                className="p-2 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                                title="Clear Chat History"
+                                            >
+                                                <RotateCcw size={18} />
+                                            </button>
+                                            <button onClick={() => setIsSimOpen(false)} className="p-2 text-white/40 hover:text-white transition-colors">
+                                                <X size={20} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0b141a] relative">
+                                        {/* Subtle CSS Pattern for Background */}
+                                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+
+                                        <div className="relative z-10 space-y-4">
+                                            {simMessages.length === 0 && (
+                                                <div className="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl text-[11px] text-indigo-200/70 leading-relaxed text-center font-medium">
+                                                    Type <span className="text-white font-bold">"START"</span> to begin the automation trace.
+                                                </div>
+                                            )}
+                                            {simMessages.map((msg, i) => (
+                                                <div key={i} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                                                    <div className={`max-w-[85%] p-3 rounded-2xl text-xs font-medium shadow-2xl relative ${msg.sender === 'me' ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-white rounded-tl-none border border-white/5'}`}>
+                                                        {msg.text}
+                                                        <div className="text-[9px] text-white/40 mt-1 text-right flex items-center justify-end gap-1">
+                                                            {msg.time}
+                                                            {msg.sender === 'me' && <span className="text-[#53bdeb] text-[10px]">✓✓</span>}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
-                                        {simLoading && (
-                                            <div className="flex justify-start animate-in fade-in duration-300">
-                                                <div className="bg-[#202c33] p-3 px-4 rounded-2xl rounded-tl-none flex gap-1.5 items-center border border-white/5 shadow-xl">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" />
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:0.2s]" />
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:0.4s]" />
+                                            ))}
+                                            {simLoading && (
+                                                <div className="flex justify-start animate-in fade-in duration-300">
+                                                    <div className="bg-[#202c33] p-3 px-4 rounded-2xl rounded-tl-none flex gap-1.5 items-center border border-white/5 shadow-xl">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" />
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:0.2s]" />
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:0.4s]" />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="p-4 bg-[#202c33] border-t border-white/5">
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={simInput}
-                                            onChange={(e) => setSimInput(e.target.value)}
-                                            onKeyPress={(e) => e.key === 'Enter' && runSimulation()}
-                                            placeholder="Type (e.g. START)"
-                                            className="w-full bg-[#2a3942] text-sm text-white p-4 pr-12 rounded-2xl focus:outline-none"
-                                        />
-                                        <button onClick={runSimulation} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-indigo-500 text-white rounded-xl shadow-lg">
-                                            <Play size={16} />
-                                        </button>
+                                    <div className="p-4 bg-[#202c33] border-t border-white/5">
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={simInput}
+                                                onChange={(e) => setSimInput(e.target.value)}
+                                                onKeyPress={(e) => e.key === 'Enter' && runSimulation()}
+                                                placeholder="Type (e.g. START)"
+                                                className="w-full bg-[#2a3942] text-sm text-white p-4 pr-12 rounded-2xl focus:outline-none"
+                                            />
+                                            <button onClick={runSimulation} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-indigo-500 text-white rounded-xl shadow-lg">
+                                                <Play size={16} />
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
                         )}
-                    </ReactFlow>
+                    </AnimatePresence>
                 </div>
             </div>
         </div>

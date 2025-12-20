@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, Home, Trello, Workflow, Sparkles, Palette, HelpCircle, ChevronUp, FileText } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, Home, Trello, Workflow, Sparkles, Palette, HelpCircle, ChevronUp, FileText, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -23,7 +23,7 @@ const navItems = [
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (val: boolean) => void }) {
     const pathname = usePathname();
     const [user, setUser] = useState<{ full_name: string; email: string; avatar?: string } | null>(null);
     const [loading, setLoading] = useState(true);
@@ -80,12 +80,21 @@ export function Sidebar() {
     };
 
     return (
-        <div className="flex h-screen w-64 flex-col border-r border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0b141a] text-black dark:text-white shadow-sm transition-colors duration-300">
+        <div className={classNames(
+            "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 dark:border-white/10 bg-white dark:bg-[#0b141a] text-black dark:text-white shadow-xl transition-transform duration-300 lg:static lg:translate-x-0",
+            isOpen ? "translate-x-0" : "-translate-x-full"
+        )}>
             {/* Logo */}
-            <div className="flex h-16 items-center border-b border-gray-200 dark:border-[#1f2937] px-6 transition-colors">
+            <div className="flex h-16 items-center justify-between border-b border-gray-200 dark:border-[#1f2937] px-6 transition-colors">
                 <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-[#02C173]">
                     <span>WBIZZ</span>
                 </div>
+                <button
+                    onClick={() => setIsOpen(false)}
+                    className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                >
+                    <X className="h-5 w-5 text-gray-500" />
+                </button>
             </div>
 
             {/* Nav */}
@@ -170,20 +179,20 @@ function UserMenu({ user, getInitial }: { user: any, getInitial: () => string })
                     <div className="fixed inset-0 z-30" onClick={() => setIsOpen(false)}></div>
 
                     <div className="absolute bottom-full left-0 w-60 mb-2 z-40 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                        <div className="bg-[#1f2c34] border border-[#2a3942] rounded-xl shadow-2xl p-1.5 overflow-hidden">
+                        <div className="bg-popover border border-border rounded-xl shadow-2xl p-1.5 overflow-hidden">
 
                             {/* Menu Items */}
                             <div className="space-y-0.5">
-                                <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:bg-[#111b21] hover:text-white rounded-lg transition-colors">
+                                <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors">
                                     <Settings className="w-4 h-4" />
                                     Settings
                                 </Link>
                             </div>
 
-                            <div className="h-px bg-[#2a3942] my-1 mx-2"></div>
+                            <div className="h-px bg-border my-1 mx-2"></div>
 
                             <div className="space-y-0.5">
-                                <Link href="#" className="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:bg-[#111b21] hover:text-white rounded-lg transition-colors">
+                                <Link href="#" className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors">
                                     <HelpCircle className="w-4 h-4" />
                                     Help & Support
                                 </Link>
@@ -192,7 +201,7 @@ function UserMenu({ user, getInitial }: { user: any, getInitial: () => string })
                                         localStorage.removeItem("access_token");
                                         window.location.href = "/login";
                                     }}
-                                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:bg-[#111b21] hover:text-white rounded-lg transition-colors text-left"
+                                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors text-left"
                                 >
                                     <LogOut className="w-4 h-4" />
                                     Log out
@@ -206,7 +215,7 @@ function UserMenu({ user, getInitial }: { user: any, getInitial: () => string })
             {/* Trigger Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center gap-3 rounded-xl p-2 transition-all duration-200 border ${isOpen ? 'bg-[#1f2c34] border-[#2a3942]' : 'bg-transparent border-transparent hover:bg-black/5 dark:hover:bg-white/5'}`}
+                className={`w-full flex items-center gap-3 rounded-xl p-2 transition-all duration-200 border ${isOpen ? 'bg-secondary border-border' : 'bg-transparent border-transparent hover:bg-black/5 dark:hover:bg-white/5'}`}
             >
                 {user.avatar ? (
                     <img

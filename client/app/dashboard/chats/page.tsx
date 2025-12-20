@@ -13,6 +13,10 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
+function classNames(...classes: (string | undefined | null | false)[]) {
+    return classes.filter(Boolean).join(" ");
+}
+
 export default function ChatsPage() {
     const searchParams = useSearchParams();
     const paramChatId = searchParams.get('chatId');
@@ -597,34 +601,36 @@ export default function ChatsPage() {
     });
 
     return (
-        <div className="flex h-[calc(100vh-6rem)] overflow-hidden rounded-xl bg-[#111b21] border border-[#202c33] shadow-2xl font-sans text-gray-200">
-
+        <div className="flex h-[calc(100vh-8rem)] lg:h-[calc(100vh-8rem)] overflow-hidden rounded-xl bg-background border border-border shadow-2xl font-sans text-foreground relative">
             {/* LEFT SIDEBAR - CHAT LIST */}
-            <div className="w-[340px] border-r border-[#202c33] flex flex-col bg-[#111b21] shrink-0">
+            <div className={classNames(
+                "w-full lg:w-[340px] border-r border-border flex flex-col bg-card shrink-0 transition-all duration-300",
+                selectedChatId ? "hidden lg:flex" : "flex"
+            )}>
 
                 {/* Search & Filter Header */}
-                <div className="p-3 bg-[#111b21] space-y-3 z-10">
+                <div className="p-3 bg-card space-y-3 z-10">
                     <div className="flex items-center justify-between px-2 pt-2">
-                        <h2 className="font-bold text-xl text-white tracking-wide">Chats</h2>
-                        <button onClick={() => setShowMenu(!showMenu)} className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-colors relative">
+                        <h2 className="font-bold text-xl text-foreground tracking-wide">Chats</h2>
+                        <button onClick={() => setShowMenu(!showMenu)} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors relative">
                             <MoreVertical className="w-5 h-5" />
                             {showMenu && (
-                                <div className="absolute right-0 top-10 w-48 bg-[#202c33] rounded-lg shadow-xl py-2 z-50 border border-[#202c33] text-gray-300">
-                                    <button className="w-full text-left px-4 py-3 hover:bg-[#111b21] text-sm flex items-center gap-3"><LayoutGrid className="w-4 h-4" /> Dashboard</button>
-                                    <button className="w-full text-left px-4 py-3 hover:bg-[#111b21] text-sm flex items-center gap-3"><Settings className="w-4 h-4" /> Settings</button>
+                                <div className="absolute right-0 top-10 w-48 bg-popover rounded-lg shadow-xl py-2 z-50 border border-border text-popover-foreground">
+                                    <button className="w-full text-left px-4 py-3 hover:bg-muted text-sm flex items-center gap-3"><LayoutGrid className="w-4 h-4" /> Dashboard</button>
+                                    <button className="w-full text-left px-4 py-3 hover:bg-muted text-sm flex items-center gap-3"><Settings className="w-4 h-4" /> Settings</button>
                                 </div>
                             )}
                         </button>
                     </div>
 
                     <div className="relative group px-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-[#00a884] transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <input
                             type="text"
                             placeholder="Search..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-[#202c33] text-gray-200 text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none transition-all placeholder-gray-500"
+                            className="w-full bg-secondary text-foreground text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none transition-all placeholder-muted-foreground/60"
                         />
                     </div>
                     <div className="flex gap-2 px-1 pb-1 overflow-x-auto no-scrollbar">
@@ -634,8 +640,8 @@ export default function ChatsPage() {
                                 onClick={() => setActiveFilter(filter)}
                                 className={`px-4 py-1.5 text-xs font-medium transition-all rounded-full border border-transparent whitespace-nowrap
                                     ${activeFilter === filter
-                                        ? 'bg-[#202c33] text-[#00a884]'
-                                        : 'text-gray-400 hover:bg-[#202c33] hover:text-gray-200'}`}
+                                        ? 'bg-secondary text-primary'
+                                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
                             >
                                 {filter}
                             </button>
@@ -650,8 +656,8 @@ export default function ChatsPage() {
                         <div
                             key={chat.id}
                             onClick={() => handleSelectChat(chat.id)}
-                            className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition-all hover:bg-[#202c33] 
-                                ${selectedChatId === chat.id ? 'bg-[#202c33]' : ''}`}
+                            className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition-all hover:bg-secondary/50 
+                                ${selectedChatId === chat.id ? 'bg-secondary' : ''}`}
                         >
                             <div className="relative shrink-0">
                                 <div className="w-12 h-12 rounded-full bg-[#2a3942] flex items-center justify-center font-medium text-lg text-gray-300 overflow-hidden">
@@ -665,15 +671,15 @@ export default function ChatsPage() {
                                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#00a884] border-2 border-[#111b21] rounded-full"></div>
                                 )}
                             </div>
-                            <div className="flex-1 min-w-0 border-b border-[#202c33] pb-3 -mb-3">
+                            <div className="flex-1 min-w-0 border-b border-border pb-3 -mb-3">
                                 <div className="flex justify-between items-baseline mb-1">
-                                    <h4 className="text-base font-normal text-white truncate">{chat.name}</h4>
-                                    <span className={`text-xs ${chat.unread > 0 ? 'text-[#00a884]' : 'text-gray-500'}`}>{chat.time}</span>
+                                    <h4 className="text-base font-normal text-foreground truncate">{chat.name}</h4>
+                                    <span className={`text-xs ${chat.unread > 0 ? 'text-primary' : 'text-muted-foreground'}`}>{chat.time}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <p className="text-sm text-gray-400 truncate max-w-[180px]">{chat.lastMessage}</p>
+                                    <p className="text-sm text-muted-foreground truncate max-w-[180px]">{chat.lastMessage}</p>
                                     {chat.unread > 0 && (
-                                        <div className="min-w-[1.2rem] h-[1.2rem] px-1 bg-[#00a884] rounded-full flex items-center justify-center text-[10px] text-[#111b21] font-bold">
+                                        <div className="min-w-[1.2rem] h-[1.2rem] px-1 bg-primary rounded-full flex items-center justify-center text-[10px] text-primary-foreground font-bold">
                                             {chat.unread}
                                         </div>
                                     )}
@@ -685,9 +691,12 @@ export default function ChatsPage() {
             </div>
 
             {/* MAIN CHAT AREA */}
-            <div className="flex-1 flex flex-col bg-[#0b141a] relative min-w-[450px]">
+            <div className={classNames(
+                "flex-1 flex flex-col bg-background relative transition-all duration-300",
+                selectedChatId ? "flex" : "hidden lg:flex"
+            )}>
                 {/* WhatsApp Doodle Background */}
-                <div className="absolute inset-0 z-0 opacity-[0.06] bg-[url('https://i.pinimg.com/originals/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')] bg-repeat bg-[length:400px_auto]"></div>
+                <div className="absolute inset-0 z-0 opacity-[0.05] dark:opacity-[0.06] bg-[url('https://i.pinimg.com/originals/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')] bg-repeat bg-[length:400px_auto] pointer-events-none"></div>
 
                 {selectedChat ? (
                     <>
@@ -697,17 +706,17 @@ export default function ChatsPage() {
                                     initial={{ y: -60 }}
                                     animate={{ y: 0 }}
                                     exit={{ y: -60 }}
-                                    className="h-16 flex items-center justify-between px-6 bg-[#202c33] z-[100] border-b border-[#303d45] absolute top-0 left-0 right-0 shadow-lg"
+                                    className="h-16 flex items-center justify-between px-6 bg-secondary z-[100] border-b border-border absolute top-0 left-0 right-0 shadow-lg"
                                 >
                                     <div className="flex items-center gap-6">
-                                        <X className="w-6 h-6 text-gray-400 cursor-pointer hover:text-white transition-colors" onClick={() => { setIsMultiSelectMode(false); setSelectedMessageIds(new Set()); }} />
+                                        <X className="w-6 h-6 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" onClick={() => { setIsMultiSelectMode(false); setSelectedMessageIds(new Set()); }} />
                                         <div className="flex flex-col">
-                                            <span className="text-white font-medium text-sm">{selectedMessageIds.size} selected</span>
+                                            <span className="text-foreground font-medium text-sm">{selectedMessageIds.size} selected</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-7">
                                         <Star
-                                            className="w-5 h-5 text-gray-400 cursor-pointer hover:text-yellow-500 transition-colors"
+                                            className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-yellow-500 transition-colors"
                                             onClick={async () => {
                                                 const token = localStorage.getItem("access_token");
                                                 for (const id of Array.from(selectedMessageIds)) {
@@ -724,7 +733,7 @@ export default function ChatsPage() {
                                             }}
                                         />
                                         <Forward
-                                            className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white transition-colors"
+                                            className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                                             onClick={() => {
                                                 // Take the first selected message for simplicity in forward
                                                 const firstId = Array.from(selectedMessageIds)[0];
@@ -736,7 +745,7 @@ export default function ChatsPage() {
                                             }}
                                         />
                                         <Trash2
-                                            className="w-5 h-5 text-gray-400 cursor-pointer hover:text-red-400 transition-colors"
+                                            className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-red-400 transition-colors"
                                             onClick={() => {
                                                 confirmAction(
                                                     "Delete Multiple?",
@@ -761,32 +770,42 @@ export default function ChatsPage() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                        <div className="h-16 flex items-center justify-between px-4 py-2 bg-[#202c33] z-50 shrink-0 shadow-sm relative">
+                        <div className="h-16 flex items-center justify-between px-2 lg:px-6 bg-secondary z-50 shrink-0 shadow-sm relative">
                             <div
-                                className="flex items-center gap-4 cursor-pointer"
-                                onClick={() => setShowRightSidebar(!showRightSidebar)}
+                                className="flex items-center gap-2 lg:gap-4 cursor-pointer flex-1 min-w-0"
                             >
-                                <div className="w-10 h-10 rounded-full bg-[#2a3942] flex items-center justify-center font-medium text-sm text-gray-300 overflow-hidden">
-                                    {selectedChat.avatar.length > 2 ? (
-                                        <img src={selectedChat.avatar} alt={selectedChat.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        selectedChat.avatar
-                                    )}
-                                </div>
-                                <div>
-                                    <h3 className="font-medium text-white text-base leading-tight">{selectedChat.name}</h3>
-                                    <p className="text-xs text-gray-400 leading-tight mt-0.5">{selectedChat.role || 'click for info'}</p>
+                                <button
+                                    onClick={() => setSelectedChatId(null)}
+                                    className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <ChevronLeft className="w-6 h-6" />
+                                </button>
+                                <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0" onClick={() => setShowRightSidebar(!showRightSidebar)}>
+                                    <div className="w-10 h-10 rounded-full bg-[#2a3942] flex items-center justify-center font-medium text-sm text-gray-300 overflow-hidden shrink-0">
+                                        {selectedChat.avatar.length > 2 ? (
+                                            <img src={selectedChat.avatar} alt={selectedChat.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            selectedChat.avatar
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <h3 className="text-sm lg:text-base font-semibold text-foreground truncate">{selectedChat.name}</h3>
+                                        <div className="flex items-center gap-1.5 leading-tight">
+                                            <div className="w-2 h-2 rounded-full bg-[#00a884] animate-pulse"></div>
+                                            <span className="text-[10px] lg:text-xs text-[#00a884] font-medium">online</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-6 pr-2">
-                                <Phone className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-                                <div className="w-px h-6 bg-gray-600/30"></div>
+                                <Phone className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors" />
+                                <div className="w-px h-6 bg-border"></div>
                                 <div className="relative z-[120]">
                                     <MoreVertical
                                         id="chat-header-more"
                                         onClick={() => setShowChatMenu(!showChatMenu)}
-                                        className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors"
+                                        className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
                                     />
                                     {showChatMenu && (
                                         <>
@@ -795,7 +814,7 @@ export default function ChatsPage() {
                                                 initial={{ opacity: 0, scale: 0.95, y: -10 }}
                                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                                 exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                className="absolute right-0 top-full mt-2 w-64 bg-[#233138] rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.5)] py-2 z-[130] border border-[#303d45] text-gray-300 overflow-hidden"
+                                                className="absolute right-0 top-full mt-2 w-64 bg-popover rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.2)] dark:shadow-[0_12px_24px_rgba(0,0,0,0.5)] py-2 z-[130] border border-border text-popover-foreground overflow-hidden"
                                             >
                                                 <button
                                                     onClick={() => {
@@ -850,7 +869,7 @@ export default function ChatsPage() {
                             {Object.entries(groupMessagesByDate(selectedChat.messages)).map(([date, msgs]) => (
                                 <div key={date} className="space-y-1">
                                     <div className="flex justify-center my-4 sticky top-0 z-20">
-                                        <span className="bg-[#1f2c34] text-gray-400 text-xs px-3 py-1.5 rounded-lg shadow-sm border border-[#1f2c34]">{date}</span>
+                                        <span className="bg-secondary text-muted-foreground text-xs px-3 py-1.5 rounded-lg shadow-sm border border-border">{date}</span>
                                     </div>
 
                                     {msgs.map((msg: any) => (
@@ -863,15 +882,15 @@ export default function ChatsPage() {
                                         >
                                             <div className="flex items-center gap-3 max-w-[85%]">
                                                 {isMultiSelectMode && (
-                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMessageIds.has(msg.id) ? 'bg-[#00a884] border-[#00a884]' : 'border-gray-500'}`}>
-                                                        {selectedMessageIds.has(msg.id) && <Check className="w-3 h-3 text-[#111b21]" />}
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMessageIds.has(msg.id) ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                                                        {selectedMessageIds.has(msg.id) && <Check className="w-3 h-3 text-primary-foreground" />}
                                                     </div>
                                                 )}
                                                 <div className={`px-3 pt-2 pb-1.5 text-[14.2px] rounded-lg shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] relative group
                                                     ${msg.sender === 'me'
-                                                        ? 'bg-[#005c4b] text-white rounded-tr-none'
-                                                        : 'bg-[#202c33] text-gray-100 rounded-tl-none'}
-                                                    ${isMultiSelectMode && selectedMessageIds.has(msg.id) ? 'ring-2 ring-[#00a884]' : ''}`}
+                                                        ? 'bg-primary text-primary-foreground rounded-tr-none'
+                                                        : 'bg-card text-foreground rounded-tl-none'}
+                                                    ${isMultiSelectMode && selectedMessageIds.has(msg.id) ? 'ring-2 ring-primary' : ''}`}
                                                 >
                                                     {/* Attachment Rendering */}
                                                     {msg.attachment && (
@@ -908,11 +927,11 @@ export default function ChatsPage() {
                                                             {msg.sender === 'me' && (
                                                                 <div className="flex scale-[0.7] origin-right ml-0.5">
                                                                     {msg.status === 'read' ? (
-                                                                        <CheckCheck className="w-4 h-4 text-[#53bdeb] stroke-[3]" />
+                                                                        <CheckCheck className="w-4 h-4 text-sky-400 dark:text-[#53bdeb] stroke-[3]" />
                                                                     ) : msg.status === 'delivered' ? (
-                                                                        <CheckCheck className="w-4 h-4 text-gray-400 stroke-[3]" />
+                                                                        <CheckCheck className="w-4 h-4 text-muted-foreground stroke-[3]" />
                                                                     ) : (
-                                                                        <Check className="w-4 h-4 text-gray-400 stroke-[3]" />
+                                                                        <Check className="w-4 h-4 text-muted-foreground stroke-[3]" />
                                                                     )}
                                                                 </div>
                                                             )}
@@ -936,31 +955,31 @@ export default function ChatsPage() {
                                                                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
                                                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                                                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                                        className={`absolute top-8 ${msg.sender === 'me' ? 'right-0' : 'left-0'} w-44 bg-[#233138] rounded-xl shadow-2xl py-2 z-[100] border border-[#303d45] text-gray-300 overflow-hidden`}
+                                                                        className={`absolute top-8 ${msg.sender === 'me' ? 'right-0' : 'left-0'} w-44 bg-popover rounded-xl shadow-2xl py-2 z-[100] border border-border text-popover-foreground overflow-hidden`}
                                                                     >
-                                                                        <button onClick={() => { setMessageInfoId(msg.id); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                        <button onClick={() => { setMessageInfoId(msg.id); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors">
                                                                             <Info className="w-4 h-4" /> Message info
                                                                         </button>
-                                                                        <button onClick={() => { setReplyingToMessage(msg); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                        <button onClick={() => { setReplyingToMessage(msg); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors">
                                                                             <Reply className="w-4 h-4" /> Reply
                                                                         </button>
-                                                                        <button onClick={() => handleCopyMessage(msg.text)} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                        <button onClick={() => handleCopyMessage(msg.text)} className="w-full text-left px-4 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors">
                                                                             <Copy className="w-4 h-4" /> Copy
                                                                         </button>
-                                                                        <button onClick={() => { setReactionPickerId(msg.id); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                        <button onClick={() => { setReactionPickerId(msg.id); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors">
                                                                             <Smile className="w-4 h-4" /> React
                                                                         </button>
-                                                                        <button onClick={() => { setForwardMessage(msg); setIsForwarding(true); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                        <button onClick={() => { setForwardMessage(msg); setIsForwarding(true); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors">
                                                                             <Forward className="w-4 h-4" /> Forward
                                                                         </button>
                                                                         <button onClick={() => handlePinMessage(selectedChat.id, msg.id, msg.pinned)} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
                                                                             <Pin className={`w-4 h-4 ${msg.pinned ? 'text-[#00a884]' : ''}`} /> {msg.pinned ? 'Unpin' : 'Pin'}
                                                                         </button>
-                                                                        <button onClick={() => handleStarMessage(selectedChat.id, msg.id, msg.starred)} className="w-full text-left px-4 py-2 hover:bg-[#111b21] text-sm flex items-center gap-3 transition-colors">
+                                                                        <button onClick={() => handleStarMessage(selectedChat.id, msg.id, msg.starred)} className="w-full text-left px-4 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors">
                                                                             <Star className={`w-4 h-4 ${msg.starred ? 'text-yellow-500 fill-yellow-500' : ''}`} /> {msg.starred ? 'Unstar' : 'Star'}
                                                                         </button>
-                                                                        <div className="h-px bg-[#303d45] my-1 mx-2"></div>
-                                                                        <button onClick={() => handleDeleteMessage(selectedChat.id, msg.id)} className="w-full text-left px-4 py-2 hover:bg-red-500/10 text-sm flex items-center gap-3 text-red-400 transition-colors">
+                                                                        <div className="h-px bg-border my-1 mx-2"></div>
+                                                                        <button onClick={() => handleDeleteMessage(selectedChat.id, msg.id)} className="w-full text-left px-4 py-2 hover:bg-destructive/10 text-sm flex items-center gap-3 text-destructive transition-colors">
                                                                             <Trash2 className="w-4 h-4" /> Delete
                                                                         </button>
                                                                     </motion.div>
@@ -1005,19 +1024,19 @@ export default function ChatsPage() {
                                                                     <motion.div
                                                                         initial={{ opacity: 0, scale: 0.9 }}
                                                                         animate={{ opacity: 1, scale: 1 }}
-                                                                        className="bg-[#233138] w-full max-w-sm rounded-2xl shadow-2xl border border-[#303d45] p-6 space-y-4"
+                                                                        className="bg-popover w-full max-w-sm rounded-2xl shadow-2xl border border-border p-6 space-y-4"
                                                                         onClick={e => e.stopPropagation()}
                                                                     >
                                                                         <div className="flex items-center justify-between">
-                                                                            <h3 className="text-xl font-semibold text-white">Message Info</h3>
-                                                                            <button onClick={() => setMessageInfoId(null)} className="text-gray-400 hover:text-white">
+                                                                            <h3 className="text-xl font-semibold text-foreground">Message Info</h3>
+                                                                            <button onClick={() => setMessageInfoId(null)} className="text-muted-foreground hover:text-foreground">
                                                                                 <X className="w-6 h-6" />
                                                                             </button>
                                                                         </div>
-                                                                        <div className="space-y-4 text-gray-300">
-                                                                            <div className="flex justify-between border-b border-[#303d45] pb-2">
+                                                                        <div className="space-y-4 text-muted-foreground">
+                                                                            <div className="flex justify-between border-b border-border pb-2">
                                                                                 <span>Status</span>
-                                                                                <span className="capitalize text-[#00a884]">{msg.status}</span>
+                                                                                <span className="capitalize text-primary">{msg.status}</span>
                                                                             </div>
                                                                             <div className="flex justify-between border-b border-[#303d45] pb-2">
                                                                                 <span>Sent</span>
@@ -1036,17 +1055,17 @@ export default function ChatsPage() {
 
                                                     {/* Reply Context inside Bubble */}
                                                     {msg.reply_to && (
-                                                        <div className="mb-2 p-2 rounded bg-black/20 border-l-4 border-[#00a884] opacity-80 cursor-pointer" onClick={() => {
+                                                        <div className="mb-2 p-2 rounded bg-black/5 dark:bg-black/20 border-l-4 border-primary opacity-80 cursor-pointer" onClick={() => {
                                                             const element = document.getElementById(`msg-${msg.reply_to}`);
                                                             element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                            element?.classList.add('ring-2', 'ring-[#00a884]');
-                                                            setTimeout(() => element?.classList.remove('ring-2', 'ring-[#00a884]'), 2000);
+                                                            element?.classList.add('ring-2', 'ring-primary');
+                                                            setTimeout(() => element?.classList.remove('ring-2', 'ring-primary'), 2000);
                                                         }}>
                                                             {(() => {
                                                                 const repliedMsg = selectedChat.messages.find((m: any) => m.id === msg.reply_to);
                                                                 return (
                                                                     <>
-                                                                        <p className="text-[#00a884] text-[11px] font-bold uppercase">{repliedMsg?.sender === 'me' ? 'You' : selectedChat.name}</p>
+                                                                        <p className="text-primary text-[11px] font-bold uppercase">{repliedMsg?.sender === 'me' ? 'You' : selectedChat.name}</p>
                                                                         <p className="text-xs line-clamp-1">{repliedMsg?.text || '📎 Attachment'}</p>
                                                                     </>
                                                                 );
@@ -1055,7 +1074,7 @@ export default function ChatsPage() {
                                                     )}
                                                     {/* Reactions Display */}
                                                     {msg.reactions && msg.reactions.length > 0 && (
-                                                        <div className={`absolute -bottom-2 ${msg.sender === 'me' ? 'right-0' : 'left-0'} flex gap-1 bg-[#202c33] rounded-full px-1.5 py-0.5 shadow-sm border border-[#303d45] scale-90`}>
+                                                        <div className={`absolute -bottom-2 ${msg.sender === 'me' ? 'right-0' : 'left-0'} flex gap-1 bg-card rounded-full px-1.5 py-0.5 shadow-sm border border-border scale-90`}>
                                                             {msg.reactions.map((emoji: string, i: number) => (
                                                                 <span key={i} className="text-xs">{emoji}</span>
                                                             ))}
@@ -1064,7 +1083,7 @@ export default function ChatsPage() {
 
                                                     {/* Pin/Star Icons */}
                                                     <div className="absolute top-1 left-1 flex gap-1 opacity-60">
-                                                        {msg.pinned && <Pin className="w-3 h-3 text-[#00a884]" />}
+                                                        {msg.pinned && <Pin className="w-3 h-3 text-primary" />}
                                                         {msg.starred && <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
                                                     </div>
                                                 </div>
@@ -1077,7 +1096,7 @@ export default function ChatsPage() {
                         </div>
 
                         {/* INPUT AREA */}
-                        <div className="min-h-[62px] px-4 py-2 bg-[#202c33] z-50 flex items-end relative">
+                        <div className="min-h-[62px] px-4 py-2 bg-secondary z-50 flex items-end relative">
                             {/* Attachment Menu */}
                             <AnimatePresence>
                                 {showAttachments && (
@@ -1098,88 +1117,104 @@ export default function ChatsPage() {
 
                             <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
 
-                            <button onClick={() => setShowAttachments(!showAttachments)} className={`p-2 rounded-full transition-colors hover:bg-[#374248] mb-1 text-gray-400 ${showAttachments ? 'text-[#00a884]' : ''}`}>
+                            <button onClick={() => setShowAttachments(!showAttachments)} className={`p-2 rounded-full transition-colors hover:bg-muted mb-1 text-muted-foreground ${showAttachments ? 'text-primary' : ''}`}>
                                 <Paperclip className={`w-6 h-6 transition-transform ${showAttachments ? 'rotate-45' : ''}`} />
                             </button>
 
                             <div className="flex-1 flex flex-col mb-1.5 min-w-0 mx-2">
                                 <AnimatePresence>
                                     {replyingToMessage && (
-                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="bg-[#111b21] border-l-4 border-[#00a884] rounded-t-lg px-3 py-2 flex items-center justify-between mb-1">
+                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="bg-card border-l-4 border-primary rounded-t-lg px-3 py-2 flex items-center justify-between mb-1">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-[#00a884] text-xs font-medium">{replyingToMessage.sender === 'me' ? 'You' : selectedChat.name}</p>
-                                                <p className="text-gray-400 text-sm truncate">{replyingToMessage.text || '📎 Attachment'}</p>
+                                                <p className="text-primary text-xs font-medium">{replyingToMessage.sender === 'me' ? 'You' : selectedChat.name}</p>
+                                                <p className="text-muted-foreground text-sm truncate">{replyingToMessage.text || '📎 Attachment'}</p>
                                             </div>
-                                            <button onClick={() => setReplyingToMessage(null)} className="text-gray-500 hover:text-white ml-2"><X className="w-4 h-4" /></button>
+                                            <button onClick={() => setReplyingToMessage(null)} className="text-muted-foreground hover:text-foreground ml-2"><X className="w-4 h-4" /></button>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
-                                <div className={`bg-[#2a3942] rounded-lg flex items-center ${replyingToMessage ? 'rounded-t-none' : ''}`}>
+                                <div className={`bg-background rounded-lg flex items-center ${replyingToMessage ? 'rounded-t-none' : ''}`}>
                                     <input
                                         type="text"
                                         value={inputMessage}
                                         onChange={(e) => setInputMessage(e.target.value)}
                                         placeholder="Type a message"
-                                        className="flex-1 bg-transparent text-white px-4 py-2.5 text-[15px] focus:outline-none placeholder-gray-400"
+                                        className="flex-1 bg-transparent text-foreground px-4 py-2.5 text-[15px] focus:outline-none placeholder-muted-foreground"
                                         onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
                                     />
                                 </div>
                             </div>
 
                             {inputMessage.trim() ? (
-                                <button onClick={() => handleSendMessage()} className="p-3 mb-1.5 bg-[#00a884] hover:bg-[#02906f] rounded-full text-[#111b21] transition-transform active:scale-95 shadow-lg">
+                                <button onClick={() => handleSendMessage()} className="p-3 mb-1.5 bg-primary hover:bg-primary/90 rounded-full text-primary-foreground transition-transform active:scale-95 shadow-lg">
                                     <Send className="w-5 h-5 ml-0.5" />
                                 </button>
                             ) : (
-                                <button onClick={() => setIsRecording(!isRecording)} className={`p-3 mb-1.5 rounded-full transition-colors hover:bg-[#374248] ${isRecording ? 'text-red-500' : 'text-gray-400'}`}>
+                                <button onClick={() => setIsRecording(!isRecording)} className={`p-3 mb-1.5 rounded-full transition-colors hover:bg-muted ${isRecording ? 'text-destructive' : 'text-muted-foreground'}`}>
                                     <Mic className="w-6 h-6" />
                                 </button>
                             )}
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-gray-600 z-10 relative overflow-hidden">
+                    <div className="flex-1 flex flex-col items-center justify-center z-10 relative overflow-hidden">
                         {/* Pulsing Radiant Glow */}
                         <motion.div
                             animate={{
                                 scale: [1, 1.2, 1],
-                                opacity: [0.15, 0.25, 0.15]
+                                opacity: [0.2, 0.4, 0.2]
                             }}
                             transition={{
                                 duration: 8,
                                 repeat: Infinity,
                                 ease: "easeInOut"
                             }}
-                            className="absolute w-[600px] h-[600px] bg-[#00a884] rounded-full blur-[120px] pointer-events-none z-0"
+                            className="absolute w-[600px] h-[600px] bg-[#00a884]/20 rounded-full blur-[120px] pointer-events-none z-0"
                         />
 
-                        <div className="w-[350px] text-center relative z-20">
-                            <motion.img
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 0.2, y: 0 }}
-                                transition={{ duration: 1 }}
-                                src="https://static.whatsapp.net/rsrc.php/v3/y6/r/wa669ae.svg"
-                                alt="Welcome"
-                                className="mx-auto mb-8"
-                            />
+                        <div className="w-[450px] text-center relative z-20 bg-card/40 backdrop-blur-sm p-12 rounded-3xl border border-border shadow-2xl">
                             <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.8, delay: 0.2 }}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 1 }}
+                                className="mb-8"
                             >
-                                <h2 className="text-4xl font-light text-gray-200 mb-4 tracking-tight">
-                                    WBIZZ
-                                    <span className="text-[10px] ml-2 align-top bg-[#00a884]/10 border border-[#00a884]/20 px-2 py-0.5 rounded-full text-[#00a884] font-bold">BETA</span>
-                                </h2>
-                                <p className="text-sm text-gray-500 leading-relaxed">
-                                    Send and receive messages without keeping your phone online.<br />
-                                    <span className="opacity-70">Seamlessly manage your business across all devices.</span>
+                                <div className="w-24 h-24 bg-primary rounded-full mx-auto flex items-center justify-center shadow-[0_0_50px_rgba(0,168,132,0.3)]">
+                                    <MessageSquare className="w-12 h-12 text-primary-foreground" />
+                                </div>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.3 }}
+                            >
+                                <h1 className="text-5xl font-black text-foreground mb-2 tracking-tighter">
+                                    WELCOME
+                                </h1>
+                                <div className="flex items-center justify-center gap-3 mb-8">
+                                    <div className="h-px w-8 bg-primary/30"></div>
+                                    <p className="text-primary font-bold tracking-[0.2em] text-[10px] uppercase">
+                                        WBIZZ Business Suite
+                                    </p>
+                                    <div className="h-px w-8 bg-primary/30"></div>
+                                </div>
+
+                                <p className="text-muted-foreground leading-relaxed text-sm max-w-[300px] mx-auto">
+                                    Select a chat from the left to start messaging. Your conversations are synced across all your devices.
                                 </p>
                             </motion.div>
                         </div>
-                        <div className="absolute bottom-10 flex items-center gap-2 text-gray-600 text-xs tracking-wide">
-                            <Zap className="w-3 h-3 text-[#00a884]" />
-                            <span className="opacity-50 font-medium uppercase">End-to-end encrypted</span>
+
+                        <div className="absolute bottom-10 flex flex-col items-center gap-4 text-muted-foreground text-[10px] tracking-[0.3em] uppercase font-bold">
+                            <div className="flex items-center gap-3">
+                                <div className="h-px w-8 bg-border"></div>
+                                <div className="flex items-center gap-1.5 opacity-60">
+                                    <Zap className="w-3 h-3 text-primary" />
+                                    <span>End-to-end encrypted</span>
+                                </div>
+                                <div className="h-px w-8 bg-border"></div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -1189,23 +1224,23 @@ export default function ChatsPage() {
             <AnimatePresence>
                 {showRightSidebar && selectedChat && (
                     <motion.div
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: 320, opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        className="bg-[#111b21] border-l border-[#202c33] flex flex-col shrink-0 overflow-hidden"
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        className="fixed inset-0 lg:static z-[150] lg:z-0 lg:w-[320px] bg-card border-l border-border flex flex-col shrink-0 overflow-hidden shadow-2xl lg:shadow-none"
                     >
-                        <div className="h-16 flex items-center justify-between px-6 bg-[#202c33] shrink-0">
+                        <div className="h-16 flex items-center justify-between px-6 bg-secondary shrink-0">
                             <div className="flex items-center gap-4">
-                                <button onClick={() => setShowRightSidebar(false)} className="text-gray-400 hover:text-white">
+                                <button onClick={() => setShowRightSidebar(false)} className="text-muted-foreground hover:text-foreground transition-colors outline-none">
                                     <X className="w-5 h-5" />
                                 </button>
-                                <h3 className="font-medium text-white text-base">Contact Info</h3>
+                                <h3 className="font-medium text-foreground text-base">Contact Info</h3>
                             </div>
                             <div className="relative z-[120]">
                                 <MoreVertical
                                     id="sidebar-more"
                                     onClick={() => setShowChatMenu(!showChatMenu)}
-                                    className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors"
+                                    className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
                                 />
                                 {showChatMenu && (
                                     <>
@@ -1214,14 +1249,14 @@ export default function ChatsPage() {
                                             initial={{ opacity: 0, scale: 0.95, y: -10 }}
                                             animate={{ opacity: 1, scale: 1, y: 0 }}
                                             exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            className="absolute right-0 top-full mt-2 w-56 bg-[#233138] rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.5)] py-2 z-[130] border border-[#303d45] text-gray-300 overflow-hidden"
+                                            className="absolute right-0 top-full mt-2 w-56 bg-popover rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.2)] dark:shadow-[0_12px_24px_rgba(0,0,0,0.5)] py-2 z-[130] border border-border text-popover-foreground overflow-hidden"
                                         >
                                             <button
                                                 onClick={() => {
                                                     handleClearChat(selectedChat.id);
                                                     setShowChatMenu(false);
                                                 }}
-                                                className="w-full text-left px-4 py-3 hover:bg-[#111b21] transition-colors text-sm flex items-center gap-3 text-red-400 group"
+                                                className="w-full text-left px-4 py-3 hover:bg-muted transition-colors text-sm flex items-center gap-3 text-destructive group"
                                             >
                                                 <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> Clear Chat
                                             </button>
@@ -1240,34 +1275,34 @@ export default function ChatsPage() {
                                         selectedChat.avatar
                                     )}
                                 </div>
-                                <h2 className="text-xl font-semibold text-white mb-1">{selectedChat.name}</h2>
-                                <p className="text-gray-400">{selectedChat.phone}</p>
+                                <h2 className="text-xl font-semibold text-foreground mb-1">{selectedChat.name}</h2>
+                                <p className="text-muted-foreground">{selectedChat.phone}</p>
                             </div>
 
-                            <div className="p-4 bg-[#202c33] rounded-lg space-y-1 shadow-sm">
-                                <span className="text-gray-400 text-xs uppercase font-medium">Email</span>
-                                <p className="text-white text-sm">{selectedChat.email}</p>
+                            <div className="p-4 bg-secondary rounded-lg space-y-1 shadow-sm">
+                                <span className="text-muted-foreground text-xs uppercase font-medium">Email</span>
+                                <p className="text-foreground text-sm">{selectedChat.email}</p>
                             </div>
 
-                            <div className="p-4 bg-[#202c33] rounded-lg space-y-1 shadow-sm">
-                                <span className="text-gray-400 text-xs uppercase font-medium">About</span>
+                            <div className="p-4 bg-secondary rounded-lg space-y-1 shadow-sm">
+                                <span className="text-muted-foreground text-xs uppercase font-medium">About</span>
                                 <textarea
                                     defaultValue={selectedChat.notes}
-                                    className="w-full bg-transparent border-none p-0 text-white text-sm focus:ring-0 resize-none h-20 placeholder-gray-600"
+                                    className="w-full bg-transparent border-none p-0 text-foreground text-sm focus:ring-0 resize-none h-20 placeholder-muted-foreground/50"
                                     placeholder="Add notes..."
                                 />
                             </div>
 
                             <div className="space-y-3">
-                                <button onClick={() => handleBlockContact(selectedChat.id)} className="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#202c33] rounded-lg text-red-400 transition-colors text-sm font-medium">
+                                <button onClick={() => handleBlockContact(selectedChat.id)} className="w-full flex items-center gap-4 px-4 py-3 hover:bg-secondary rounded-lg text-destructive transition-colors text-sm font-medium">
                                     <Ban className="w-5 h-5" />
                                     Block {selectedChat.name}
                                 </button>
-                                <button onClick={() => handleReportContact(selectedChat.id)} className="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#202c33] rounded-lg text-red-400 transition-colors text-sm font-medium">
+                                <button onClick={() => handleReportContact(selectedChat.id)} className="w-full flex items-center gap-4 px-4 py-3 hover:bg-secondary rounded-lg text-destructive transition-colors text-sm font-medium">
                                     <ThumbsDown className="w-5 h-5" />
                                     Report contact
                                 </button>
-                                <button onClick={() => handleDeleteChat(selectedChat.id)} className="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#202c33] rounded-lg text-red-400 transition-colors text-sm font-medium">
+                                <button onClick={() => handleDeleteChat(selectedChat.id)} className="w-full flex items-center gap-4 px-4 py-3 hover:bg-secondary rounded-lg text-destructive transition-colors text-sm font-medium">
                                     <Trash2 className="w-5 h-5" />
                                     Delete Chat
                                 </button>
@@ -1283,29 +1318,29 @@ export default function ChatsPage() {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-[#233138] w-full max-w-md rounded-2xl shadow-2xl border border-[#303d45] flex flex-col max-h-[80vh] overflow-hidden"
+                            className="bg-popover w-full max-w-md rounded-2xl shadow-2xl border border-border flex flex-col max-h-[80vh] overflow-hidden"
                         >
-                            <div className="p-6 border-b border-[#303d45] flex items-center justify-between bg-[#202c33]">
-                                <h3 className="text-xl font-semibold text-white">Forward message to</h3>
-                                <button onClick={() => setIsForwarding(false)} className="text-gray-400 hover:text-white transition-colors">
+                            <div className="p-6 border-b border-border flex items-center justify-between bg-secondary">
+                                <h3 className="text-xl font-semibold text-foreground">Forward message to</h3>
+                                <button onClick={() => setIsForwarding(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
-                            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 bg-[#111b21]">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 bg-background">
                                 {chats.map(chat => (
                                     <button
                                         key={chat.id}
                                         onClick={() => handleForwardMessage(chat.id)}
-                                        className="w-full flex items-center gap-4 p-3 hover:bg-[#202c33] rounded-xl transition-colors text-left group"
+                                        className="w-full flex items-center gap-4 p-3 hover:bg-secondary rounded-xl transition-colors text-left group"
                                     >
                                         <div className="w-12 h-12 rounded-full bg-[#2a3942] flex items-center justify-center text-xl text-white overflow-hidden shadow-inner">
                                             {chat.avatar?.length > 2 ? <img src={chat.avatar} className="w-full h-full object-cover" /> : chat.avatar || <User className="w-6 h-6 text-gray-500" />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-white truncate group-hover:text-[#00a884] transition-colors">{chat.name}</p>
-                                            <p className="text-sm text-gray-400 truncate">{chat.phone}</p>
+                                            <p className="font-medium text-foreground truncate group-hover:text-primary transition-colors">{chat.name}</p>
+                                            <p className="text-sm text-muted-foreground truncate">{chat.phone}</p>
                                         </div>
-                                        <Forward className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+                                        <Forward className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
                                     </button>
                                 ))}
                             </div>
@@ -1325,9 +1360,9 @@ export default function ChatsPage() {
                             exit={{ opacity: 0, x: 20, scale: 0.9 }}
                             className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border backdrop-blur-md min-w-[280px]
                                 ${toast.type === 'success' ? 'bg-[#00a884]/90 border-[#00a884] text-white' :
-                                    toast.type === 'error' ? 'bg-red-500/90 border-red-500 text-white' :
+                                    toast.type === 'error' ? 'bg-destructive/90 border-destructive text-white' :
                                         toast.type === 'warning' ? 'bg-yellow-500/90 border-yellow-500 text-black' :
-                                            'bg-[#202c33]/95 border-[#303d45] text-white'}`}
+                                            'bg-secondary/95 border-border text-foreground'}`}
                         >
                             {toast.type === 'success' && <CheckCircle className="w-5 h-5" />}
                             {toast.type === 'error' && <XCircle className="w-5 h-5" />}
@@ -1353,13 +1388,13 @@ export default function ChatsPage() {
                             className="bg-[#233138] w-full max-w-sm rounded-2xl shadow-2xl border border-[#303d45] p-6 space-y-6"
                         >
                             <div className="space-y-2">
-                                <h3 className="text-xl font-bold text-white">{confirmConfig.title}</h3>
-                                <p className="text-gray-400 text-sm leading-relaxed">{confirmConfig.message}</p>
+                                <h3 className="text-xl font-bold text-foreground">{confirmConfig.title}</h3>
+                                <p className="text-muted-foreground text-sm leading-relaxed">{confirmConfig.message}</p>
                             </div>
                             <div className="flex gap-3 pt-2">
                                 <button
                                     onClick={() => setConfirmConfig(null)}
-                                    className="flex-1 px-4 py-2.5 rounded-lg text-gray-300 hover:bg-white/5 transition-colors font-medium border border-[#303d45]"
+                                    className="flex-1 px-4 py-2.5 rounded-lg text-muted-foreground hover:bg-muted transition-colors font-medium border border-border"
                                 >
                                     Cancel
                                 </button>
@@ -1368,7 +1403,7 @@ export default function ChatsPage() {
                                         confirmConfig.onConfirm();
                                         setConfirmConfig(null);
                                     }}
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors font-bold shadow-lg shadow-red-500/20"
+                                    className="flex-1 px-4 py-2.5 rounded-lg bg-destructive hover:bg-destructive/90 text-white transition-colors font-bold shadow-lg shadow-destructive/20"
                                 >
                                     Confirm
                                 </button>

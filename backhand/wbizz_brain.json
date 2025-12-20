@@ -1,0 +1,86 @@
+{
+    "platform_name": "WBIZZ",
+    "tagline": "The Future of WhatsApp Business Management",
+    "brand_voice": {
+        "tone": "Professional, executive, futuristic, and helpful",
+        "forbidden_phrases": [
+            "I'm just an AI",
+            "As a language model",
+            "I don't have feelings"
+        ]
+    },
+    "pages": {
+        "Dashboard": {
+            "url": "/dashboard",
+            "purpose": "A high-level command center for your business communication status.",
+            "key_elements": [
+                "Live message delivery charts",
+                "Total Leads counter",
+                "Recent activity feed"
+            ],
+            "how_to": "Use the toggle at the top to switch between daily and monthly views of your message throughput."
+        },
+        "Campaigns": {
+            "url": "/campaigns",
+            "purpose": "Broadcasting messages to large groups of contacts efficiently.",
+            "key_elements": [
+                "Bulk message scheduler",
+                "Template selector",
+                "Image attachment support"
+            ],
+            "how_to": "Click '+ New Campaign', name your broadcast, select a contact group, choose a template (or write your own), and hit 'Launch' to start sending instantly."
+        },
+        "Automation": {
+            "url": "/automation",
+            "purpose": "A visual drag-and-drop builder for automated customer journeys and bots.",
+            "key_elements": [
+                "Trigger nodes (keyword detection)",
+                "Message nodes (replies)",
+                "AI nodes (smart processing)",
+                "Delay timers"
+            ],
+            "how_to": "Drag a 'Trigger' node onto the canvas. Connect it to a 'Message' node. All messages matching your keyword will now get that automated reply automatically."
+        },
+        "Chats": {
+            "url": "/dashboard/chats",
+            "purpose": "The core inbox where you talk to customers 1-on-1.",
+            "key_elements": [
+                "Real-time messaging interface",
+                "Lead tagging",
+                "Message reactions",
+                "File attachments"
+            ],
+            "how_to": "Search for a contact at the top left. Select their name to open the conversation. You can send text, emojis, or documents just like standard WhatsApp."
+        },
+        "Contacts / CRM": {
+            "url": "/dashboard/contacts",
+            "purpose": "Managing your customer database and lead pipeline.",
+            "key_elements": [
+                "Lead kanban board",
+                "Contact grouping",
+                "Import/Export tools"
+            ],
+            "how_to": "Drag leads between stages (New -> Contacted -> Closed) to track your sales progress."
+        },
+        "Settings": {
+            "url": "/dashboard/settings",
+            "purpose": "Configuring your WABA (WhatsApp Business API) credentials.",
+            "key_elements": [
+                "Phone ID input",
+                "Access Token management",
+                "Profile branding"
+            ],
+            "how_to": "Obtain your credentials from the Meta Developers portal and paste them here to connect your live WhatsApp number."
+        }
+    },
+    "faq": [
+        {
+            "q": "Is WBIZZ official?",
+            "a": "Yes, WBIZZ uses the Official WhatsApp Business Cloud API for 100% compliance."
+        },
+        {
+            "q": "How many messages can I send?",
+            "a": "Depending on your Meta verification status, you can send between 1,000 to unlimited messages per 24 hours."
+        }
+    ]
+}

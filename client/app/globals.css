@@ -2,27 +2,77 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #060707;
-  --foreground: #ededed;
+  --background: #f0f2f5;
+  --foreground: #111b21;
+  --card: #ffffff;
+  --card-foreground: #111b21;
+  --popover: #ffffff;
+  --popover-foreground: #111b21;
+  --primary: #00a884;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f2f5;
+  --secondary-foreground: #111b21;
+  --muted: #f0f2f5;
+  --muted-foreground: #667781;
+  --accent: #f0f2f5;
+  --accent-foreground: #111b21;
+  --destructive: #ea0038;
+  --destructive-foreground: #ffffff;
+  --border: #e9edef;
+  --input: #e9edef;
+  --ring: #00a884;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: #0b141a;
+  --foreground: #e9edef;
+  --card: #111b21;
+  --card-foreground: #e9edef;
+  --popover: #233138;
+  --popover-foreground: #e9edef;
+  --primary: #00a884;
+  --primary-foreground: #111b21;
+  --secondary: #202c33;
+  --secondary-foreground: #e9edef;
+  --muted: #202c33;
+  --muted-foreground: #8696a0;
+  --accent: #202c33;
+  --accent-foreground: #e9edef;
+  --destructive: #f15c5c;
+  --destructive-foreground: #e9edef;
+  --border: #222d34;
+  --input: #222d34;
+  --ring: #00a884;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
   --font-sans: var(--font-ibm-plex-sans);
   --font-mono: var(--font-ibm-plex-mono);
-
-  /* Custom Fonts Helper */
-  --font-IBMPlexBold: var(--font-ibm-plex-sans);
-  /* Mapping for the user's snippet */
-  --font-IBMPlexRegular: var(--font-ibm-plex-sans);
-  /* Mapping for the user's snippet */
-
-  /* Custom Colors */
   --color-whatsapp-teal: #128C7E;
   --color-whatsapp-green: #25D366;
-  --color-koala-dark: #060707;
-  --color-koala-accent: #02C173;
 }
 
 body {
@@ -67,53 +117,36 @@ body {
   animation: blob 7s infinite;
 }
 
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
 
-/* React Flow Edge Animation */
-@keyframes edge-pulse {
-  from {
-    stroke-dashoffset: 20;
-  }
-
-  to {
-    stroke-dashoffset: 0;
-  }
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
 
-.react-flow__edge-path.animated {
-  stroke-dasharray: 5;
-  stroke-width: 3;
-  animation: edge-pulse 1s linear infinite !important;
-  stroke: #02C173;
-  filter: drop-shadow(0 0 8px rgba(2, 193, 115, 0.6));
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke: #ffffff !important;
-  stroke-width: 4;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
 }
 
-/* Glassmorphism Classes */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
 .glass-panel {
-  background: rgba(17, 27, 33, 0.7) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: color-mix(in srgb, var(--background), transparent 30%);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
 }
 
 .glass-card {
-  background: rgba(31, 44, 52, 0.6) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: color-mix(in srgb, var(--card), transparent 40%);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
 }
