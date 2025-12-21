@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 type Tab = "profile" | "data" | "team";
+import { API_URL } from "@/lib/config";
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState<Tab>("profile");
@@ -43,7 +44,7 @@ export default function SettingsPage() {
         const token = localStorage.getItem("access_token");
         if (!token) return;
         try {
-            const res = await fetch("http://localhost:8000/users/me", {
+            const res = await fetch(`${API_URL}/users/me`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (res.ok) {
@@ -64,7 +65,7 @@ export default function SettingsPage() {
         const token = localStorage.getItem("access_token");
 
         try {
-            const res = await fetch("http://localhost:8000/users/me", {
+            const res = await fetch(`${API_URL}/users/me`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -94,7 +95,7 @@ export default function SettingsPage() {
             const autoTable = (await import('jspdf-autotable')).default;
 
             // Fetch data from the new JSON endpoint
-            const response = await fetch("http://localhost:8000/api/leads/all", {
+            const response = await fetch(`${API_URL}/api/leads/all`, {
                 method: 'GET',
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -181,7 +182,7 @@ export default function SettingsPage() {
         const token = localStorage.getItem("access_token");
         setIsDeletingAccount(true);
         try {
-            const res = await fetch("http://localhost:8000/users/me", {
+            const res = await fetch(`${API_URL}/users/me`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -210,7 +211,7 @@ export default function SettingsPage() {
         formData.append("file", file);
 
         try {
-            const uploadRes = await fetch("http://localhost:8000/api/upload", {
+            const uploadRes = await fetch(`${API_URL}/api/upload`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData
@@ -220,7 +221,7 @@ export default function SettingsPage() {
                 const data = await uploadRes.json();
                 const avatarUrl = data.url;
 
-                const updateRes = await fetch("http://localhost:8000/users/me", {
+                const updateRes = await fetch(`${API_URL}/users/me`, {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -260,7 +261,7 @@ export default function SettingsPage() {
         const token = localStorage.getItem("access_token");
 
         try {
-            const res = await fetch("http://localhost:8000/users/me/password", {
+            const res = await fetch(`${API_URL}/users/me/password`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

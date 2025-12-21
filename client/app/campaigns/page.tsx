@@ -6,6 +6,7 @@ import { Plus, Send, Clock, BarChart2, Filter, Home, ArrowLeft, X, Check, Edit, 
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { API_URL } from "@/lib/config";
 
 type Campaign = {
     id: string;
@@ -109,7 +110,7 @@ export default function CampaignsPage() {
         }
 
         // Fetch Campaigns
-        fetch("http://localhost:8000/api/campaigns", {
+        fetch(`${API_URL}/api/campaigns`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -140,7 +141,7 @@ export default function CampaignsPage() {
             });
 
         // Fetch Stats
-        fetch("http://localhost:8000/api/campaigns/stats", {
+        fetch(`${API_URL}/api/campaigns/stats`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -156,8 +157,8 @@ export default function CampaignsPage() {
             const token = localStorage.getItem("access_token");
             const method = editingId ? "PUT" : "POST";
             const url = editingId
-                ? `http://localhost:8000/api/campaigns/${editingId}`
-                : "http://localhost:8000/api/campaigns";
+                ? `${API_URL}/api/campaigns/${editingId}`
+                : `${API_URL}/api/campaigns`;
 
             const res = await fetch(url, {
                 method: method,

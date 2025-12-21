@@ -5,6 +5,7 @@ import { Copy, Plus, Edit, Search, ArrowLeft, LayoutGrid, List as ListIcon, Tras
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { API_URL } from "@/lib/config";
 
 interface Template {
     id?: string;
@@ -62,7 +63,7 @@ export default function TemplatesPage() {
         try {
             setLoading(true);
             const token = localStorage.getItem("access_token");
-            const res = await fetch("http://localhost:8000/api/templates", {
+            const res = await fetch(`${API_URL}/api/templates`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (res.ok) {
@@ -81,8 +82,8 @@ export default function TemplatesPage() {
         setSubmitting(true);
         const token = localStorage.getItem("access_token");
         const url = editingTemplate
-            ? `http://localhost:8000/api/templates/${editingTemplate.id}`
-            : "http://localhost:8000/api/templates";
+            ? `${API_URL}/api/templates/${editingTemplate.id}`
+            : `${API_URL}/api/templates`;
         const method = editingTemplate ? "PUT" : "POST";
 
         try {
@@ -112,7 +113,7 @@ export default function TemplatesPage() {
         if (!confirm("Are you sure you want to delete this template?")) return;
         const token = localStorage.getItem("access_token");
         try {
-            const res = await fetch(`http://localhost:8000/api/templates/${id}`, {
+            const res = await fetch(`${API_URL}/api/templates/${id}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });

@@ -13,6 +13,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
     BarChart, Bar
 } from 'recharts';
+import { API_URL } from "@/lib/config";
 
 // --- Mock Data for Charts ---
 const statusData = [
@@ -74,7 +75,7 @@ export default function DashboardPage() {
             if (!token) return;
 
             try {
-                const res = await fetch("http://127.0.0.1:8000/api/dashboard/activity", {
+                const res = await fetch(`${API_URL}/api/dashboard/activity`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {

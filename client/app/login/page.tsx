@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, LogIn, UserPlus, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { API_URL } from '@/lib/config';
 
 const CheckIcon = () => {
     return (
@@ -69,7 +70,7 @@ export default function LoginPage() {
             formData.append('username', loginEmail);
             formData.append('password', loginPassword);
 
-            const res = await fetch('http://127.0.0.1:8000/token', {
+            const res = await fetch(`${API_URL}/token`, {
                 method: 'POST',
                 body: formData,
             });
@@ -104,7 +105,7 @@ export default function LoginPage() {
         }
 
         try {
-            const res = await fetch('http://127.0.0.1:8000/signup', {
+            const res = await fetch(`${API_URL}/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

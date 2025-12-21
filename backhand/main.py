@@ -47,9 +47,17 @@ os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Enable CORS for the frontend
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    FRONTEND_URL,
+    FRONTEND_URL.rstrip("/"), # Remove trailing slash if any
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["*"], # In production, allowing all origins is safer for initial testing, we can restrict it later
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

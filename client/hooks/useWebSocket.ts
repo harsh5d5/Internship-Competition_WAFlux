@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { WS_URL } from '@/lib/config';
 
 interface WebSocketMessage {
     type: string;
@@ -92,10 +93,8 @@ export function useWebSocket(
         setConnectionStatus('connecting');
 
         try {
-            // Determine WebSocket URL based on environment
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = process.env.NEXT_PUBLIC_WS_URL || 'localhost:8000';
-            const wsUrl = `${protocol}//${host}/ws/${encodeURIComponent(userId)}`;
+            // Determine WebSocket URL based on config
+            const wsUrl = `${WS_URL}/ws/${encodeURIComponent(userId)}`;
 
             console.log('🔌 Connecting to WebSocket:', wsUrl);
             const ws = new WebSocket(wsUrl);

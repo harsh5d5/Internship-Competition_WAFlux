@@ -12,6 +12,7 @@ import {
     CheckCircle, AlertCircle
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { API_URL } from "@/lib/config";
 
 function classNames(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
@@ -62,7 +63,7 @@ export default function ChatsPage() {
     const markChatAsRead = async (id: string) => {
         const token = localStorage.getItem("access_token");
         try {
-            await fetch(`http://127.0.0.1:8000/api/leads/${id}/read`, {
+            await fetch(`${API_URL}/api/leads/${id}/read`, {
                 method: 'PUT',
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -81,7 +82,7 @@ export default function ChatsPage() {
             async () => {
                 const token = localStorage.getItem("access_token");
                 try {
-                    await fetch(`http://127.0.0.1:8000/api/leads/${id}`, {
+                    await fetch(`${API_URL}/api/leads/${id}`, {
                         method: 'DELETE',
                         headers: { "Authorization": `Bearer ${token}` }
                     });
@@ -103,7 +104,7 @@ export default function ChatsPage() {
             async () => {
                 const token = localStorage.getItem("access_token");
                 try {
-                    await fetch(`http://127.0.0.1:8000/api/leads/${id}/block`, {
+                    await fetch(`${API_URL}/api/leads/${id}/block`, {
                         method: 'POST',
                         headers: { "Authorization": `Bearer ${token}` }
                     });
@@ -124,7 +125,7 @@ export default function ChatsPage() {
             async () => {
                 const token = localStorage.getItem("access_token");
                 try {
-                    await fetch(`http://127.0.0.1:8000/api/leads/${id}/report`, {
+                    await fetch(`${API_URL}/api/leads/${id}/report`, {
                         method: 'POST',
                         headers: { "Authorization": `Bearer ${token}` }
                     });
@@ -145,7 +146,7 @@ export default function ChatsPage() {
             async () => {
                 const token = localStorage.getItem("access_token");
                 try {
-                    await fetch(`http://127.0.0.1:8000/api/leads/${leadId}/messages/${msgId}`, {
+                    await fetch(`${API_URL}/api/leads/${leadId}/messages/${msgId}`, {
                         method: 'DELETE',
                         headers: { "Authorization": `Bearer ${token}` }
                     });
@@ -173,7 +174,7 @@ export default function ChatsPage() {
     const handleStarMessage = async (leadId: string, msgId: string, currentState: boolean) => {
         const token = localStorage.getItem("access_token");
         try {
-            await fetch(`http://127.0.0.1:8000/api/leads/${leadId}/messages/${msgId}/star`, {
+            await fetch(`${API_URL}/api/leads/${leadId}/messages/${msgId}/star`, {
                 method: 'PUT',
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -199,7 +200,7 @@ export default function ChatsPage() {
     const handlePinMessage = async (leadId: string, msgId: string, currentState: boolean) => {
         const token = localStorage.getItem("access_token");
         try {
-            await fetch(`http://127.0.0.1:8000/api/leads/${leadId}/messages/${msgId}/pin`, {
+            await fetch(`${API_URL}/api/leads/${leadId}/messages/${msgId}/pin`, {
                 method: 'PUT',
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -225,7 +226,7 @@ export default function ChatsPage() {
     const handleReactToMessage = async (leadId: string, msgId: string, emoji: string) => {
         const token = localStorage.getItem("access_token");
         try {
-            await fetch(`http://127.0.0.1:8000/api/leads/${leadId}/messages/${msgId}/react`, {
+            await fetch(`${API_URL}/api/leads/${leadId}/messages/${msgId}/react`, {
                 method: 'POST',
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -281,7 +282,7 @@ export default function ChatsPage() {
                 setShowChatMenu(false);
 
                 try {
-                    const res = await fetch(`http://127.0.0.1:8000/api/leads/${id}/messages`, {
+                    const res = await fetch(`${API_URL}/api/leads/${id}/messages`, {
                         method: 'DELETE',
                         headers: { "Authorization": `Bearer ${token}` }
                     });
@@ -304,7 +305,7 @@ export default function ChatsPage() {
         const token = localStorage.getItem("access_token");
         try {
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            await fetch(`http://127.0.0.1:8000/api/leads/${targetChatId}/messages`, {
+            await fetch(`${API_URL}/api/leads/${targetChatId}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -373,7 +374,7 @@ export default function ChatsPage() {
     const fetchChats = async () => {
         const token = localStorage.getItem("access_token");
         try {
-            const res = await fetch("http://127.0.0.1:8000/api/leads", {
+            const res = await fetch(`${API_URL}/api/leads`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (res.status === 401) {
@@ -492,7 +493,7 @@ export default function ChatsPage() {
         // Sync with backend
         try {
             const token = localStorage.getItem("access_token");
-            await fetch(`http://127.0.0.1:8000/api/leads/${selectedChatId}/messages`, {
+            await fetch(`${API_URL}/api/leads/${selectedChatId}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -521,7 +522,7 @@ export default function ChatsPage() {
 
         try {
             const token = localStorage.getItem("access_token");
-            const response = await fetch('http://127.0.0.1:8000/api/upload', {
+            const response = await fetch(`${API_URL}/api/upload`, {
                 method: 'POST',
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData,
@@ -563,7 +564,7 @@ export default function ChatsPage() {
             setShowAttachments(false);
 
             // Sync with backend
-            await fetch(`http://127.0.0.1:8000/api/leads/${selectedChatId}/messages`, {
+            await fetch(`${API_URL}/api/leads/${selectedChatId}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -720,7 +721,7 @@ export default function ChatsPage() {
                                             onClick={async () => {
                                                 const token = localStorage.getItem("access_token");
                                                 for (const id of Array.from(selectedMessageIds)) {
-                                                    await fetch(`http://127.0.0.1:8000/api/leads/${selectedChat.id}/messages/${id}/star`, {
+                                                    await fetch(`${API_URL}/api/leads/${selectedChat.id}/messages/${id}/star`, {
                                                         method: 'PUT',
                                                         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                                                         body: JSON.stringify({ starred: true })
@@ -753,7 +754,7 @@ export default function ChatsPage() {
                                                     async () => {
                                                         const token = localStorage.getItem("access_token");
                                                         for (const id of Array.from(selectedMessageIds)) {
-                                                            await fetch(`http://127.0.0.1:8000/api/leads/${selectedChat.id}/messages/${id}`, {
+                                                            await fetch(`${API_URL}/api/leads/${selectedChat.id}/messages/${id}`, {
                                                                 method: 'DELETE',
                                                                 headers: { "Authorization": `Bearer ${token}` }
                                                             });

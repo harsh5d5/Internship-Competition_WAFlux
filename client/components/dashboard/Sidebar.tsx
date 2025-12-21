@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, Home, Trello, Workflow, Sparkles, Palette, HelpCircle, ChevronUp, FileText, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { API_URL } from "@/lib/config";
 
 // Helper for class names since I don't know if they have a lib/utils
 function classNames(...classes: (string | undefined | null | false)[]) {
@@ -35,7 +36,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (va
             return;
         }
 
-        fetch("http://localhost:8000/users/me", {
+        fetch(`${API_URL}/users/me`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

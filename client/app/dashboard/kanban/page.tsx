@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, Reorder, useDragControls } from "framer-motion";
 import { Plus, MoreHorizontal, DollarSign, Calendar } from "lucide-react";
+import { API_URL } from "@/lib/config";
 
 // Types
 type Lead = {
@@ -50,7 +51,7 @@ export default function KanbanPage() {
     // Fetch logic
     useEffect(() => {
         const token = localStorage.getItem("access_token");
-        fetch("http://localhost:8000/api/leads", {
+        fetch(`${API_URL}/api/leads`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -112,7 +113,7 @@ export default function KanbanPage() {
 
         // Backend Update
         const token = localStorage.getItem("access_token");
-        fetch(`http://localhost:8000/api/leads/${leadId}/status`, {
+        fetch(`${API_URL}/api/leads/${leadId}/status`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -151,7 +152,7 @@ export default function KanbanPage() {
         const token = localStorage.getItem("access_token");
 
         try {
-            const res = await fetch("http://localhost:8000/api/leads", {
+            const res = await fetch(`${API_URL}/api/leads`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -182,7 +183,7 @@ export default function KanbanPage() {
         const token = localStorage.getItem("access_token");
 
         try {
-            const res = await fetch(`http://localhost:8000/api/leads/${editingLead.id}`, {
+            const res = await fetch(`${API_URL}/api/leads/${editingLead.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -248,7 +249,7 @@ export default function KanbanPage() {
         // Batch delete on backend (ideally we should have a batch endpoint but for now we loop)
         try {
             await Promise.all(columnLeads.map(lead =>
-                fetch(`http://localhost:8000/api/leads/${lead.id}`, {
+                fetch(`${API_URL}/api/leads/${lead.id}`, {
                     method: "DELETE",
                     headers: { "Authorization": `Bearer ${token}` }
                 })

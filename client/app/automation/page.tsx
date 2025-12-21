@@ -17,6 +17,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { ArrowLeft, Save, Play, Plus, MessageSquare, Clock, FileText, Image as ImageIcon, StickyNote, Zap, Split, ChevronRight, Layout, Sparkles, Bot, Palette, Trash2, RotateCcw, X, Menu, ChevronLeft, FolderOpen, FileBox, Edit2, MoreVertical, Check } from "lucide-react";
 import Link from 'next/link';
+import { API_URL } from "@/lib/config";
 
 // --- Custom Nodes ---
 
@@ -118,7 +119,7 @@ const AINode = ({ data }: any) => {
         if (!token) return;
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:8000/api/ai/chat", {
+            const res = await fetch(`${API_URL}/api/ai/chat`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -266,7 +267,7 @@ const MessageNode = ({ data }: any) => {
         if (!token || !text) return;
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:8000/api/ai/rewrite", {
+            const res = await fetch(`${API_URL}/api/ai/rewrite`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -543,7 +544,7 @@ export default function AutomationPage() {
         const token = localStorage.getItem("access_token");
         if (!token) return;
         try {
-            const res = await fetch("http://localhost:8000/api/automation", {
+            const res = await fetch(`${API_URL}/api/automation`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
@@ -584,7 +585,7 @@ export default function AutomationPage() {
 
         const token = localStorage.getItem("access_token");
         try {
-            const res = await fetch(`http://localhost:8000/api/automation/${id}`, {
+            const res = await fetch(`${API_URL}/api/automation/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -639,7 +640,7 @@ export default function AutomationPage() {
             // But if user really wants to rename from sidebar:
             try {
                 // 1. Get the flow
-                const getRes = await fetch(`http://localhost:8000/api/automation/${id}`, {
+                const getRes = await fetch(`${API_URL}/api/automation/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const flowData = await getRes.json();
@@ -648,7 +649,7 @@ export default function AutomationPage() {
                 flowData.name = newName;
 
                 // 3. Save back
-                await fetch("http://localhost:8000/api/automation", {
+                await fetch(`${API_URL}/api/automation`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -720,7 +721,7 @@ export default function AutomationPage() {
             if (!token) return;
 
             try {
-                const res = await fetch("http://localhost:8000/api/automation", {
+                const res = await fetch(`${API_URL}/api/automation`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -764,7 +765,7 @@ export default function AutomationPage() {
         const currentStatus = forcedStatus || flowStatus;
         setSaveStatus('Saving...');
         try {
-            const res = await fetch("http://localhost:8000/api/automation", {
+            const res = await fetch(`${API_URL}/api/automation`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

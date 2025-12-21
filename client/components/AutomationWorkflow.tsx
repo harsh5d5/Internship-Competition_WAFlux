@@ -8,6 +8,7 @@ import {
     Settings, Play, Terminal, Database, Sparkles,
     BarChart3, Globe, ShieldCheck
 } from "lucide-react";
+import { API_URL } from "@/lib/config";
 
 export default function AutomationWorkflow() {
     const [activeStep, setActiveStep] = useState(0);
@@ -23,7 +24,7 @@ export default function AutomationWorkflow() {
             const token = localStorage.getItem("access_token");
             if (!token) return;
             try {
-                const res = await fetch("http://localhost:8000/api/dashboard/stats", {
+                const res = await fetch(`${API_URL}/api/dashboard/stats`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {

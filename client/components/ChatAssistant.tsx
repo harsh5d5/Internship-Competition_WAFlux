@@ -6,6 +6,7 @@ import {
     MessageSquare, X, Send, Sparkles, User,
     Bot, Loader2, Minus, Maximize2, RotateCcw
 } from "lucide-react";
+import { API_URL } from "@/lib/config";
 
 interface Message {
     role: "user" | "assistant";
@@ -52,7 +53,7 @@ export default function ChatAssistant() {
                 return;
             }
 
-            const response = await fetch("http://localhost:8000/api/ai/assistant", {
+            const response = await fetch(`${API_URL}/api/ai/assistant`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -83,7 +84,7 @@ export default function ChatAssistant() {
             console.error("WBIZZ Assistant Connection Error:", error);
             setMessages(prev => [...prev, {
                 role: "assistant",
-                content: "I'm having a connection hiccup with the WBIZZ server. Please make sure the backend is running at http://localhost:8000."
+                content: `I'm having a connection hiccup with the WBIZZ server. Please try again in a moment.`
             }]);
         } finally {
             setIsLoading(false);

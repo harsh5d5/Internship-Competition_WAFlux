@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MoreHorizontal, Search, UserPlus, Filter, X, Phone, Tag } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/lib/config";
 
 export interface Contact {
     id: string;
@@ -64,7 +65,7 @@ export default function ContactsPage() {
         const fetchContacts = async () => {
             const token = localStorage.getItem("access_token");
             try {
-                const res = await fetch("http://127.0.0.1:8000/api/leads", {
+                const res = await fetch(`${API_URL}/api/leads`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -97,8 +98,8 @@ export default function ContactsPage() {
         };
 
         const url = isEditing && editingId
-            ? `http://127.0.0.1:8000/api/leads/${editingId}`
-            : "http://127.0.0.1:8000/api/leads";
+            ? `${API_URL}/api/leads/${editingId}`
+            : `${API_URL}/api/leads`;
         const method = isEditing ? "PUT" : "POST";
 
         try {
@@ -134,7 +135,7 @@ export default function ContactsPage() {
 
         try {
             const token = localStorage.getItem("access_token");
-            const res = await fetch(`http://127.0.0.1:8000/api/leads/${id}`, {
+            const res = await fetch(`${API_URL}/api/leads/${id}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });
