@@ -142,11 +142,11 @@ export default function LoginPage() {
             </div>
 
             {/* Back Button */}
-            <Link href="/" className="absolute top-8 left-8 z-50 flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
-                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-[#02C173] group-hover:text-[#060707] group-hover:border-[#02C173] transition-all shadow-lg backdrop-blur-sm">
-                    <ArrowLeft size={18} />
+            <Link href="/" className="absolute top-4 left-4 md:top-8 md:left-8 z-50 flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-[#02C173] group-hover:text-[#060707] group-hover:border-[#02C173] transition-all shadow-lg backdrop-blur-sm">
+                    <ArrowLeft size={16} />
                 </div>
-                <span className="font-medium text-sm tracking-wide group-hover:translate-x-1 transition-transform">Back to Home</span>
+                <span className="font-medium text-xs md:text-sm tracking-wide group-hover:translate-x-1 transition-transform">Back to Home</span>
             </Link>
 
             {/* Animated Background Orbs (Refined) */}
@@ -159,12 +159,12 @@ export default function LoginPage() {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="relative w-full max-w-6xl h-[700px] bg-[#060707] rounded-2xl overflow-hidden shadow-2xl border border-white/5"
+                className="relative w-[95%] md:w-full max-w-6xl h-auto min-h-[600px] md:h-[700px] bg-[#060707] rounded-3xl md:rounded-2xl overflow-hidden shadow-2xl border border-white/5 flex flex-col md:block"
             >
 
-                {/* Diagonal Background Shape (The 'Green Side' of the theme) */}
+                {/* Diagonal Background Shape (Visible on Desktop) */}
                 <motion.div
-                    className="absolute inset-0 z-0 bg-gradient-to-br from-[#02352b] to-[#011a14]"
+                    className="absolute inset-0 z-0 bg-gradient-to-br from-[#02352b] to-[#011a14] hidden md:block"
                     animate={{
                         clipPath: isLogin
                             ? 'polygon(0 0, 100% 0, 62% 100%, 0% 100%)'   // Login: Shape covers Left/Center
@@ -191,7 +191,7 @@ export default function LoginPage() {
 
                 {/* Welcome Section - Login (Appear on Left - Green Side) */}
                 <motion.div
-                    className="absolute left-8 top-1/2 -translate-y-1/2 w-[45%] z-10 pointer-events-none"
+                    className="absolute left-8 top-1/2 -translate-y-1/2 w-[45%] z-10 pointer-events-none hidden md:block"
                     animate={{
                         x: isLogin ? 0 : -200,
                         opacity: isLogin ? 1 : 0,
@@ -231,7 +231,7 @@ export default function LoginPage() {
 
                 {/* Welcome Section - Register (Appear on Right - Green Side) */}
                 <motion.div
-                    className="absolute right-8 top-1/2 -translate-y-1/2 w-[45%] z-10 text-right pointer-events-none flex flex-col items-end"
+                    className="absolute right-8 top-1/2 -translate-y-1/2 w-[45%] z-10 text-right pointer-events-none hidden md:block flex flex-col items-end"
                     animate={{
                         x: isLogin ? 200 : 0,
                         opacity: isLogin ? 0 : 1,
@@ -278,8 +278,8 @@ export default function LoginPage() {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: '100%', opacity: 0 }}
                             transition={{ duration: 0.7, ease: 'easeInOut' }}
-                            className="absolute right-0 top-0 w-[52%] h-full flex flex-col justify-center px-16 bg-[#060707] z-20"
-                            style={{ clipPath: 'polygon(10% 0, 100% 0, 100% 100%, 0% 100%)' } as any}
+                            className="relative md:absolute md:right-0 md:top-0 w-full md:w-[52%] min-h-[500px] md:h-full flex flex-col justify-center p-8 md:px-16 bg-[#060707] z-20"
+                            style={{ clipPath: typeof window !== 'undefined' && window.innerWidth > 768 ? 'polygon(10% 0, 100% 0, 100% 100%, 0% 100%)' : 'none' } as any}
                         >
                             <h2 className="text-3xl font-bold mb-8 text-white">Sign In</h2>
 
@@ -337,6 +337,16 @@ export default function LoginPage() {
                                     )}
                                 </motion.button>
                             </form>
+
+                            {/* Mobile Toggle Link */}
+                            <div className="mt-8 text-center md:hidden">
+                                <p className="text-gray-400 text-sm">
+                                    Don't have an account?{" "}
+                                    <button onClick={() => setIsLogin(false)} className="text-[#02C173] font-bold hover:underline">
+                                        Sign Up
+                                    </button>
+                                </p>
+                            </div>
                         </motion.div>
                     )}
 
@@ -348,8 +358,8 @@ export default function LoginPage() {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: '-100%', opacity: 0 }}
                             transition={{ duration: 0.7, ease: 'easeInOut' }}
-                            className="absolute left-0 top-0 w-[52%] h-full flex flex-col justify-center px-16 bg-[#060707] z-20"
-                            style={{ clipPath: 'polygon(0 0, 90% 0, 100% 100%, 0% 100%)' } as any}
+                            className="relative md:absolute md:left-0 md:top-0 w-full md:w-[52%] min-h-[550px] md:h-full flex flex-col justify-center p-8 md:px-16 bg-[#060707] z-20"
+                            style={{ clipPath: typeof window !== 'undefined' && window.innerWidth > 768 ? 'polygon(0 0, 90% 0, 100% 100%, 0% 100%)' : 'none' } as any}
                         >
                             <h2 className="text-3xl font-bold mb-8 text-white">Create an account</h2>
                             <form onSubmit={handleSignup} className="space-y-4">
@@ -416,6 +426,16 @@ export default function LoginPage() {
                                     )}
                                 </motion.button>
                             </form>
+
+                            {/* Mobile Toggle Link */}
+                            <div className="mt-8 text-center md:hidden">
+                                <p className="text-gray-400 text-sm">
+                                    Already have an account?{" "}
+                                    <button onClick={() => setIsLogin(true)} className="text-[#02C173] font-bold hover:underline">
+                                        Sign In
+                                    </button>
+                                </p>
+                            </div>
 
                             <div className="mt-4 text-center">
                                 <p className="text-xs text-gray-500">
