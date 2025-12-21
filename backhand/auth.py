@@ -5,10 +5,9 @@ from typing import Optional
 from jose import JWTError, jwt
 
 # --- Configuration ---
-# You should generate a random secret key for production: openssl rand -hex 32
-SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_key_for_dev_only_change_this_for_prod")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_key_for_dev_only")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 # --- Password Hashing ---
 pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
