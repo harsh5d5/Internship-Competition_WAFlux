@@ -1,7 +1,13 @@
+import os
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from dotenv import load_dotenv
 
-uri = "mongodb+srv://vicky3213v_db_user:vickky123@cluster0.uspmpyh.mongodb.net/?appName=Cluster0"
+# Load environment variables
+load_dotenv()
+
+# Get URI from environment variable or use the default
+uri = os.getenv("MONGODB_URI", "mongodb+srv://vicky3213v_db_user:vickky123@cluster0.uspmpyh.mongodb.net/?appName=Cluster0")
 
 # Create a new client and connect to the server with a 5-second timeout
 client = MongoClient(uri, server_api=ServerApi('1'), serverSelectionTimeoutMS=5000)
