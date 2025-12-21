@@ -1,194 +1,137 @@
-# Challenge Description
+# 🚀 WBIZZ - Advanced WhatsApp Business Dashboard
 
-## 🚀 Overview
-We're looking for a talented frontend developer to join our team! This competition tests your skills in modern web development with Next.js and React.
+**Master Your Business, One Message at a Time.**
 
-**Prize:** Internship position + Competitive stipend
+WBIZZ is a high-performance, full-stack WhatsApp Business Management platform designed to streamline communication, automate engagement, and provide deep insights into your business interactions. Built with modern technologies, it offers a seamless experience for managing contacts, running campaigns, and building complex automation flows.
 
-## 🎯 Challenge: WhatsApp Business Dashboard Migration
+---
 
-### Current Tech Stack
-- **Frontend:** Vanilla JavaScript + HTML + CSS
-- **Backend:** FastAPI (Python)
-- **Database:** MongoDB
-- **APIs:** WhatsApp Business API Integration
+## ✨ Key Features
 
-### Your Task
-Migrate and improve our WhatsApp Business Dashboard from vanilla JavaScript to Next.js 14+ with modern best practices.
+### 📊 Intelligent Dashboard
+- **Real-time Analytics**: Monitor Total Contacts, Active Chats, Campaigns, and Message Volume at a glance.
+- **Interactive Data Visualization**: Beautifully rendered charts for message history, audience engagement, and campaign performance.
+- **Activity Feed**: Stay updated with the latest interactions across your business.
 
-## 📐 Project Scope
+### 👥 CRM & Contact Management
+- **Centralized Database**: Manage your business contacts with search, filter, and sorting capabilities.
+- **Segmentation**: Organize contacts with tags and custom fields for targeted messaging.
+- **Bulk Operations**: Seamlessly import/export contacts and perform batch actions.
 
-### Core Features to Implement
+### 💬 Professional Chat Interface
+- **Real-time Messaging**: Low-latency chat experience powered by WebSockets.
+- **Template Integration**: Send approved WhatsApp templates with dynamic parameters.
+- **Media Support**: Send and receive images and documents directly within the chat.
+- **Rich Status Indicators**: Track if messages are Sent, Delivered, or Read.
 
-#### 1. Dashboard Page 📊
-- Real-time statistics cards (Total Contacts, Active Chats, Campaigns, Messages)
-- Interactive charts for message analytics
-- Recent activity feed
-- Quick action buttons
+### 📢 Campaign Management
+- **Bulk Broadcasts**: Create and schedule messaging campaigns for large audiences.
+- **Deep Analytics**: Track delivery status per contact and overall campaign success rates.
+- **Template Integration**: Use pre-defined templates for professional outreach.
 
-#### 2. Contacts Management 👥
-- Contact list with search, filter, and sorting
-- Individual contact profile view
-- Contact tags and custom fields
-- Import/Export contacts functionality
-- Bulk operations (tag, delete, export)
+### 🤖 Automation & AI
+- **Automation Flow Builder**: Design complex logical branches for automated responses.
+- **AI Integration**: Enhance customer interactions with AI-powered assistants (Gemini/OpenAI).
+- **Global AI Persona**: Define your agent's personality and behavior.
 
-#### 3. Chat Interface 💬
-- WhatsApp-style chat UI
-- Message list with user selection
-- Send text messages
-- Send WhatsApp templates with parameters
-- Media support (images, documents)
-- Message status indicators (sent, delivered, read)
-- Real-time message updates
+### 📝 Template & Asset Management
+- **Template Gallery**: Browse, preview, and manage your WhatsApp message templates.
+- **Category Filtering**: Quickly find templates for Marketing, Utility, or Authentication.
 
-#### 4. Campaign Management 📢
-- Create bulk messaging campaigns
-- Select contact sheets (Google Sheets integration)
-- Choose WhatsApp templates
-- Campaign status tracking
-- View campaign analytics
-- Contact list for each campaign
-- Delivery status per contact
+---
 
-#### 5. Templates Management 📝
-- List all approved WhatsApp templates
-- Template preview
-- Template parameter filling
-- Template categories
-- Search and filter templates
+## 🛠️ Technology Stack
 
-#### 6. User Management (Optional - Bonus Points) 👤
-- User profile
-- Settings and preferences
-- Multi-user support with roles
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | Next.js 14, TypeScript, Tailwind CSS, Shadcn UI, Framer Motion, Recharts, Lucide Icons |
+| **Backend** | FastAPI (Python), Motor (Async MongoDB), Pydantic, JWT Auth |
+| **Database** | MongoDB |
+| **Real-time** | WebSockets |
+| **Deployment** | Docker, Nginx, Docker Compose |
 
-## 🛠️ Technical Requirements
+---
 
-### Must Have
-1. **Next.js 14+** with App Router
-2. **TypeScript** (strongly recommended)
-3. **Tailwind CSS** or **Shadcn UI** for styling
-4. **Responsive Design** (Mobile + Desktop)
-5. **State Management** (Zustand / Redux / Context API)
-6. **API Integration** with FastAPI backend
-7. **Authentication** (JWT token handling)
-8. **Error Handling** and Loading States
-9. **Form Validation** (Zod / React Hook Form)
-10. **Toast Notifications** for user feedback
+## 📂 Project Structure
 
-### Good to Have (Bonus Points)
-- React Query / SWR for data fetching
-- Framer Motion for animations
-- Chart.js / Recharts for analytics
-- WebSocket for real-time updates
-- PWA capabilities
-- Dark Mode toggle
-- Accessibility (a11y) best practices
-- Testing (Jest, React Testing Library)
-- Docker configuration for deployment
+```text
+WBIZZ/
+├── backhand/               # 🐍 FastAPI Backend
+│   ├── main.py            # Primary API routes and logic
+│   ├── models.py          # Data validation schemas (Pydantic)
+│   ├── database.py        # MongoDB connection management
+│   ├── auth.py            # Security and JWT handling
+│   ├── websocket_manager.py# Real-time communication logic
+│   └── requirements.txt   # Python dependencies
+├── client/                 # ⚛️ Next.js Frontend
+│   ├── app/               # Next.js App Router (Pages & Layouts)
+│   ├── components/        # Specialized & Atomic UI Components
+│   │   ├── dashboard/    # Dashboard-specific widgets
+│   │   ├── chat/         # Chat interface components
+│   │   └── ui/           # Radix-based base UI elements
+│   ├── lib/               # Shared hooks, utils, and global state
+│   └── public/            # Static assets (images, icons)
+├── nginx/                  # 🌐 Proxy Configuration
+│   └── nginx.conf         # Rate limiting and routing rules
+├── docs/                   # 📖 Documentation & Guides
+└── docker-compose.yml      # 📦 Container Orchestration
+```
 
-## 📊 API Integration Details
+---
 
-### Backend API Structure
-`Backend API: https://your-backend-url.com/whatsapp` (Local: `http://localhost:8000`)
+## 🚀 Getting Started
 
-### Key Endpoints
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 18+ (for local development)
+- Python 3.10+ (for local development)
 
-#### Authentication
-- `GET /` - Health check
-- Authentication via JWT tokens (Bearer token in headers)
+### One-Command Setup (Docker)
+```bash
+docker-compose up --build
+```
+The application will be available at `http://localhost:3000`.
 
-#### Contacts
-- `GET /users?login_user={user_id}` - Get all contacts
-- `GET /tags` - Get all contact tags
+### Local Development
 
-#### Chats
-- `GET /chats/{phone_number}` - Get chat history
-- `POST /send` - Send message
+1. **Backend Setup**:
+   ```bash
+   cd backhand
+   pip install -r requirements.txt
+   uvicorn main:app --reload
+   ```
 
-#### Campaigns
-- `GET /campaigns` - Get all campaigns
-- `GET /campaign_contacts?campaign={name}` - Get campaign contacts
-- `GET /imported_numbers?sheet_name={name}` - Get contacts from sheet
-- `GET /{campaign_name}` - Get campaign status
+2. **Frontend Setup**:
+   ```bash
+   cd client
+   npm install
+   npm run dev
+   ```
 
-#### Templates
-- `GET /templates` - Get all WhatsApp templates
+---
 
-#### Sheets
-- `GET /sheets` - Get all Google Sheets
+## 🔒 Environment Variables
 
-## 🎨 Design Requirements
+Ensure you have a `.env` file in the root directory (or respective folders) with:
 
-### UI/UX Guidelines
-1. **Modern & Clean:** Follow 2024-2025 design trends
-2. **WhatsApp Theme:** Use WhatsApp's color palette (#128C7E, #25D366)
-3. **Responsive:** Mobile-first approach
-4. **Fast:** Optimize for performance (Core Web Vitals)
-5. **Intuitive:** Self-explanatory UI with minimal learning curve
-6. **Consistent:** Reusable component library
+```env
+# Backend
+MONGODB_URL=your_mongodb_url
+JWT_SECRET=your_secret_key
+WHATSAPP_API_TOKEN=your_token
 
-### Reference Inspiration
-- WhatsApp Web Interface
-- Modern SaaS dashboards (Linear, Notion, Vercel)
-- Shadcn UI component examples
+# Frontend
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-## 📦 Deliverables
+---
 
-### What to Submit
-1. **GitHub Repository (Public/Private)**
-   - Well-structured Next.js project
-   - Clean, commented code
-   - Proper Git history (meaningful commits)
-2. **README.md with:**
-   - Setup instructions
-   - Environment variables needed
-   - Tech stack used
-   - Project structure explanation
-   - Screenshots/Demo video
-3. **Live Demo (Deployed)**
-   - Vercel / Netlify / Any hosting platform
-   - Working demo with mock data if backend not connected
-4. **Documentation (Optional - Bonus)**
-   - Component documentation
-   - API integration guide
-   - Design decisions explanation
+## 📄 License
 
-## 🏆 Evaluation Criteria
+This project is part of an internship competition. All rights reserved.
 
-### Scoring Breakdown (100 Points)
-- **Functionality (30 points):** All core features working correctly
-- **Code Quality (20 points):** Clean, maintainable, well-structured code
-- **UI/UX Design (20 points):** Beautiful, intuitive, responsive design
-- **Performance (10 points):** Fast loading, optimized assets
-- **Best Practices (10 points):** TypeScript, ESLint, proper folder structure
-- **Innovation (10 points):** Creative solutions, bonus features
+---
 
-### Bonus Points (Up to +20)
-- ✅ Dark mode implementation (+5)
-- ✅ Real-time updates with WebSocket (+5)
-- ✅ Comprehensive testing (+5)
-- ✅ Excellent documentation (+3)
-- ✅ PWA features (+2)
-
-## 💡 Tips for Success
-1. **Start Small:** Implement core features first, then add enhancements
-2. **Reusable Components:** Build a solid component library
-3. **State Management:** Plan your state structure early
-4. **Error Handling:** Handle loading, error, and empty states gracefully
-5. **Mobile First:** Design for mobile, then scale up
-6. **Git Commits:** Make frequent, meaningful commits
-7. **Ask Questions:** If APIs are unclear, make reasonable assumptions
-8. **Time Management:** Don't over-engineer, focus on working features
-
-## Technologies
-- Next.js 14+
-- TypeScript
-- React
-- Tailwind CSS
-- Shadcn UI
-- FastAPI
-- MongoDB
-- JWT
-- WebSocket
+<p align="center">
+  Built with ❤️ for High-Performance Business Communication
+</p>
