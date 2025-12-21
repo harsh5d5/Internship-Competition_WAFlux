@@ -68,27 +68,27 @@ export default function AutomationWorkflow() {
             <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[140px] animate-pulse [animation-delay:1s]" />
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
-                <div className="flex flex-col lg:flex-row items-end justify-between mb-8 gap-8">
-                    <div className="max-w-2xl">
+                <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between mb-8 gap-8">
+                    <div className="max-w-2xl w-full">
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             className="flex items-center gap-2 mb-4"
                         >
-                            <div className="h-[2px] w-12 bg-[#02C173]" />
-                            <span className="text-[#02C173] text-sm font-black tracking-[0.4em] uppercase">WBIZZ Engine v4.0</span>
+                            <div className="h-[2px] w-8 lg:w-12 bg-[#02C173]" />
+                            <span className="text-[#02C173] text-[10px] lg:text-sm font-black tracking-[0.4em] uppercase">WBIZZ Engine v4.0</span>
                         </motion.div>
                         <motion.h2
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-[0.9]"
+                            className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-6 lg:mb-8 tracking-tighter leading-[0.9]"
                         >
                             Seamless <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#02C173] to-emerald-400">Intelligence</span>
                         </motion.h2>
                         <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            className="text-xl text-gray-400 leading-relaxed"
+                            className="text-lg lg:text-xl text-gray-400 leading-relaxed"
                         >
                             Experience our state-of-the-art automation architecture.
                             From raw WhatsApp signals to localized AI decision-making.
@@ -98,15 +98,15 @@ export default function AutomationWorkflow() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         whileInView={{ opacity: 1, scale: 1 }}
-                        className="flex gap-4"
+                        className="flex flex-row lg:flex-row gap-3 lg:gap-4 w-full lg:w-auto"
                     >
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl min-w-[160px]">
-                            <p className="text-3xl font-black text-white">{stats.leads}</p>
-                            <p className="text-[10px] text-gray-500 uppercase font-black mt-1">Total Leads Sync</p>
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-4 lg:p-6 rounded-2xl lg:rounded-3xl flex-1 lg:min-w-[160px]">
+                            <p className="text-2xl lg:text-3xl font-black text-white">{stats.leads}</p>
+                            <p className="text-[9px] lg:text-[10px] text-gray-500 uppercase font-black mt-1">Total Leads Sync</p>
                         </div>
-                        <div className="bg-[#02C173] p-6 rounded-3xl min-w-[160px] shadow-[0_0_30px_rgba(2,193,115,0.3)]">
-                            <p className="text-3xl font-black text-black">{stats.automations}</p>
-                            <p className="text-[10px] text-black/60 uppercase font-black mt-1">Live Workflows</p>
+                        <div className="bg-[#02C173] p-4 lg:p-6 rounded-2xl lg:rounded-3xl flex-1 lg:min-w-[160px] shadow-[0_0_30px_rgba(2,193,115,0.3)]">
+                            <p className="text-2xl lg:text-3xl font-black text-black">{stats.automations}</p>
+                            <p className="text-[9px] lg:text-[10px] text-black/60 uppercase font-black mt-1">Live Workflows</p>
                         </div>
                     </motion.div>
                 </div>
@@ -181,12 +181,12 @@ export default function AutomationWorkflow() {
                         variants={containerVariants}
                         initial="hidden"
                         whileInView="visible"
-                        className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-0 h-auto lg:h-[400px] relative z-10"
+                        className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-0 h-auto lg:h-[400px] relative z-10"
                     >
                         {/* 1. INPUT SOURCE (SIGNALS) */}
                         <motion.div
                             variants={cardVariants}
-                            className={`w-[280px] p-6 bg-[#0c1116] border ${activeStep === 0 ? 'border-[#02C173] shadow-[0_0_30px_rgba(2,193,115,0.15)]' : 'border-white/5'} rounded-[2rem] transition-all duration-500`}
+                            className={`w-full max-w-[320px] lg:w-[280px] p-6 lg:p-6 bg-[#0c1116] border ${activeStep === 0 ? 'border-[#02C173] shadow-[0_0_30px_rgba(2,193,115,0.15)]' : 'border-white/5'} rounded-[2rem] transition-all duration-500`}
                         >
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-10 h-10 rounded-2xl bg-[#25d366]/10 flex items-center justify-center">
@@ -215,17 +215,17 @@ export default function AutomationWorkflow() {
                         {/* 2. MIDDLE-WARE (BRAIN) */}
                         <motion.div
                             variants={cardVariants}
-                            className={`w-40 h-40 rounded-[2.5rem] flex flex-col items-center justify-center transition-all bg-[#0c1116] border ${activeStep === 1 ? 'border-[#02C173] ring-4 ring-[#02C173]/10' : 'border-white/5'} shadow-2xl relative group`}
+                            className={`w-32 h-32 lg:w-40 lg:h-40 rounded-[2.5rem] flex flex-col items-center justify-center transition-all bg-[#0c1116] border ${activeStep === 1 ? 'border-[#02C173] ring-4 ring-[#02C173]/10' : 'border-white/5'} shadow-2xl relative group my-4 lg:my-0`}
                         >
-                            <div className="relative mb-3">
+                            <div className="relative mb-2 lg:mb-3">
                                 <motion.div
                                     animate={activeStep === 1 ? { rotate: 360 } : {}}
                                     transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                                    className="absolute inset-0 -m-6 border-2 border-dashed border-[#02C173]/20 rounded-full"
+                                    className="absolute inset-0 -m-4 lg:-m-6 border-2 border-dashed border-[#02C173]/20 rounded-full"
                                 />
-                                <Cpu className={`w-10 h-10 transition-colors ${activeStep === 1 ? 'text-[#02C173]' : 'text-white/20'}`} />
+                                <Cpu className={`w-8 h-8 lg:w-10 lg:h-10 transition-colors ${activeStep === 1 ? 'text-[#02C173]' : 'text-white/20'}`} />
                             </div>
-                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${activeStep === 1 ? 'text-[#02C173]' : 'text-white/20'}`}>
+                            <span className={`text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${activeStep === 1 ? 'text-[#02C173]' : 'text-white/20'}`}>
                                 Neural Bridge
                             </span>
                         </motion.div>
@@ -233,7 +233,7 @@ export default function AutomationWorkflow() {
                         {/* 3. AI COGNITIVE NODE */}
                         <motion.div
                             variants={cardVariants}
-                            className={`w-[280px] p-6 bg-[#0c1116] border ${activeStep === 2 ? 'border-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.15)]' : 'border-white/5'} rounded-[2rem] transition-all duration-500`}
+                            className={`w-full max-w-[320px] lg:w-[280px] p-6 lg:p-6 bg-[#0c1116] border ${activeStep === 2 ? 'border-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.15)]' : 'border-white/5'} rounded-[2rem] transition-all duration-500`}
                         >
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-10 h-10 rounded-2xl bg-purple-500/10 flex items-center justify-center">
@@ -256,7 +256,7 @@ export default function AutomationWorkflow() {
                         </motion.div>
 
                         {/* 4. RESULT COLUMN (DESTINATIONS) */}
-                        <div className="flex flex-col justify-around h-[320px] lg:h-[300px] mt-10 lg:mt-0">
+                        <div className="flex flex-col justify-around gap-4 lg:gap-0 lg:h-[300px] mt-8 lg:mt-0 w-full max-w-[320px] lg:w-auto">
                             {[
                                 { icon: Database, name: "Lead Synchronization", desc: "CRM Auto-Update", color: "#02C173", step: 3 },
                                 { icon: UserPlus, name: "Audience Segmentation", desc: "Tag: High-Intent", color: "blue", step: 3 },
@@ -265,7 +265,7 @@ export default function AutomationWorkflow() {
                                 <motion.div
                                     key={i}
                                     variants={cardVariants}
-                                    className={`w-[280px] p-4 bg-[#0c1116] border ${activeStep >= task.step ? 'border-white/20' : 'border-white/5 opacity-40'} rounded-2xl transition-all flex items-center gap-4`}
+                                    className={`w-full lg:w-[280px] p-4 bg-[#0c1116] border ${activeStep >= task.step ? 'border-white/20' : 'border-white/5 opacity-40'} rounded-2xl transition-all flex items-center gap-4`}
                                 >
                                     <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${task.color}20` }}>
                                         <task.icon className="w-5 h-5" style={{ color: task.color }} />

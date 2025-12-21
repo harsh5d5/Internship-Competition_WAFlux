@@ -15,7 +15,7 @@ import ReactFlow, {
     Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { ArrowLeft, Save, Play, Plus, MessageSquare, Clock, FileText, Image as ImageIcon, StickyNote, Zap, Split, ChevronRight, Layout, Sparkles, Bot, Palette, Trash2, RotateCcw, X, Menu, ChevronLeft } from "lucide-react";
+import { ArrowLeft, Save, Play, Plus, MessageSquare, Clock, FileText, Image as ImageIcon, StickyNote, Zap, Split, ChevronRight, Layout, Sparkles, Bot, Palette, Trash2, RotateCcw, X, Menu, ChevronLeft, FolderOpen, FileBox, Edit2, MoreVertical, Check } from "lucide-react";
 import Link from 'next/link';
 
 // --- Custom Nodes ---
@@ -486,6 +486,39 @@ const initialEdges = [
 
 import Aurora from '@/components/ui/Aurora';
 
+// Custom Modal Component for Confirmation
+const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel }: any) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-[#111b21] border border-white/10 rounded-3xl p-6 w-full max-w-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden"
+            >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#02C173] to-transparent opacity-50" />
+                <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
+                <p className="text-gray-400 text-sm mb-6 leading-relaxed">{message}</p>
+                <div className="flex justify-end gap-3">
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="px-6 py-2 bg-[#02C173] hover:bg-[#02a965] text-[#060707] text-sm font-bold rounded-xl shadow-lg shadow-[#02C173]/20 transition-all transform hover:scale-105"
+                    >
+                        Confirm
+                    </button>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
 export default function AutomationPage() {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -499,7 +532,136 @@ export default function AutomationPage() {
     const [flowId, setFlowId] = useState<string | null>(null);
     const [flowName, setFlowName] = useState('Welcome Flow');
     const [isEditingName, setIsEditingName] = useState(false);
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+    const [savedFlows, setSavedFlows] = useState<any[]>([]);
+    const [renamingId, setRenamingId] = useState<string | null>(null);
+    const [tempRenameValue, setTempRenameValue] = useState("");
+
+    const fetchSavedFlows = async () => {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+        try {
+            const res = await fetch("http://localhost:8000/api/automation", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const flows = await res.json();
+                setSavedFlows(flows || []);
+            }
+        } catch (err) {
+            console.error("Failed to fetch flows list:", err);
+        }
+    };
+
+    const loadSpecificFlow = (flow: any) => {
+        if (flow.id === flowId) return; // Already on this flow
+
+        setConfirmModal({
+            isOpen: true,
+            title: "Load Automation?",
+            message: "Unsaved changes to your current canvas will be lost. Do you want to switch?",
+            onConfirm: () => {
+                setFlowId(flow.id);
+                setFlowStatus(flow.status);
+                setFlowName(flow.name);
+                setNodes(flow.nodes.map((node: any) => ({
+                    ...node,
+                    data: { ...node.data, id: node.id, onDelete: deleteNode, onChange: onNodeDataChange }
+                })));
+                setEdges(flow.edges);
+                setSaveStatus('Loaded');
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                if (window.innerWidth < 1024) setIsSidebarOpen(false);
+            }
+        });
+    };
+
+    const deleteFlow = async (e: any, id: string) => {
+        e.stopPropagation();
+        if (!confirm("Are you sure you want to delete this flow?")) return;
+
+        const token = localStorage.getItem("access_token");
+        try {
+            const res = await fetch(`http://localhost:8000/api/automation/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setSavedFlows(prev => prev.filter(f => f.id !== id));
+                if (flowId === id) {
+                    createNewFlow(); // Reset canvas if current flow deleted
+                }
+            }
+        } catch (err) {
+            console.error("Delete failed:", err);
+        }
+    };
+
+    const startRenaming = (e: any, flow: any) => {
+        e.stopPropagation();
+        setRenamingId(flow.id);
+        setTempRenameValue(flow.name);
+    };
+
+    const submitRename = (e: any, id: string) => {
+        e.stopPropagation();
+        if (tempRenameValue.trim() && tempRenameValue !== savedFlows.find(f => f.id === id)?.name) {
+            updateFlowName(id, tempRenameValue);
+        }
+        setRenamingId(null);
+    };
+
+    const cancelRename = (e: any) => {
+        e.stopPropagation();
+        setRenamingId(null);
+    };
+
+    const updateFlowName = async (id: string, newName: string) => {
+        const token = localStorage.getItem("access_token");
+        // We need to update just the name. For now, we can only update by saving the whole flow, 
+        // but since we don't have the whole flow data loaded for every item in the list, 
+        // passing just the ID and Name to the backend would be ideal. 
+        // However, our backend `save_automation_flow` expects a full object.
+        // A workaround for the Sidebar list is to just update state locally for now if we are editing the active flow,
+        // or fetch -> update -> push if it's inactive.
+
+        // Simpler approach for this specific request:
+        // If it's the active flow, we just setFlowName, which triggers a save in the next manual save or auto-save.
+        if (id === flowId) {
+            setFlowName(newName);
+            // Force a save immediately to persist name change
+            setTimeout(() => handleSave(), 100);
+        } else {
+            // If inactive, we need to fetch it first (or assume we have data if we cached it, which we didn't fully).
+            // Let's rely on standard practice: You usually rename the *active* flow.
+            // But if user really wants to rename from sidebar:
+            try {
+                // 1. Get the flow
+                const getRes = await fetch(`http://localhost:8000/api/automation/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const flowData = await getRes.json();
+
+                // 2. Update name
+                flowData.name = newName;
+
+                // 3. Save back
+                await fetch("http://localhost:8000/api/automation", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify(flowData)
+                });
+                fetchSavedFlows(); // Refresh list
+            } catch (err) {
+                console.error("Rename failed", err);
+            }
+        }
+    };
 
     const deleteNode = useCallback((id: string) => {
         setNodes((nds) => nds.filter((node) => node.id !== id));
@@ -507,26 +669,38 @@ export default function AutomationPage() {
     }, [setNodes, setEdges]);
 
     const createNewFlow = () => {
-        if (confirm("Save current work and start a new automation?")) {
-            setNodes(initialNodes.map(node => ({
-                ...node,
-                data: { ...node.data, id: node.id, onDelete: deleteNode, onChange: onNodeDataChange }
-            })));
-            setEdges(initialEdges);
-            setFlowId(null);
-            setFlowName(`New Automation ${Date.now().toString().slice(-4)}`);
-            setFlowStatus('Draft');
-            setSaveStatus('Draft Mode');
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Start New Automation?",
+            message: "Unsaved changes to the current flow will be lost. Are you sure you want to start fresh?",
+            onConfirm: () => {
+                setNodes(initialNodes.map(node => ({
+                    ...node,
+                    data: { ...node.data, id: node.id, onDelete: deleteNode, onChange: onNodeDataChange }
+                })));
+                setEdges(initialEdges);
+                setFlowId(null);
+                setFlowName(`New Automation ${Date.now().toString().slice(-4)}`);
+                setFlowStatus('Draft');
+                setSaveStatus('Draft Mode');
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const resetCanvas = () => {
-        if (confirm("Are you sure you want to reset the entire automation? This cannot be undone.")) {
-            setNodes([]);
-            setEdges([]);
-            setSaveStatus('Canvas Reset');
-            setFlowId(null);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Reset Canvas?",
+            message: "This will permanently delete all nodes and connections. This action cannot be undone.",
+            onConfirm: () => {
+                setNodes([]);
+                setEdges([]);
+                setSaveStatus('Canvas Reset');
+                setFlowId(null);
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const onNodeDataChange = useCallback((id: string, newData: any) => {
@@ -551,6 +725,8 @@ export default function AutomationPage() {
                 });
                 if (res.ok) {
                     const flows = await res.json();
+                    setSavedFlows(flows || []);
+
                     if (flows && flows.length > 0) {
                         // Priority: Welcome Flow, then any existing flow
                         const flowToLoad = flows.find((f: any) => f.name === "Welcome Flow") || flows[0];
@@ -607,6 +783,7 @@ export default function AutomationPage() {
                 const savedFlow = await res.json();
                 if (!flowId) setFlowId(savedFlow.id);
                 setSaveStatus('All changes saved');
+                fetchSavedFlows(); // Refresh list after save
                 return true;
             } else {
                 setSaveStatus('Sync Error');
@@ -623,6 +800,7 @@ export default function AutomationPage() {
         const success = await handleSave('Published');
         if (success) {
             setFlowStatus('Published');
+            fetchSavedFlows(); // Refresh list to update status pill in sidebar
         }
     }, [handleSave]);
 
@@ -898,6 +1076,90 @@ export default function AutomationPage() {
                             </div>
                         ))}
                     </div>
+
+                    <div className="pt-6 border-t border-white/10">
+                        <div className="flex items-center justify-between mb-4 px-1">
+                            <h3 className="text-[11px] font-semibold text-white uppercase tracking-[0.3em] flex items-center gap-3">
+                                <div className="w-1.5 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_#3b82f6]" />
+                                Your Flows ({savedFlows.length})
+                            </h3>
+                            <button
+                                onClick={fetchSavedFlows}
+                                className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-blue-400 transition-all"
+                                title="Refresh List"
+                            >
+                                <RotateCcw size={12} />
+                            </button>
+                        </div>
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                            {savedFlows.length === 0 ? (
+                                <p className="text-[10px] text-gray-500 italic px-2">No saved automations yet.</p>
+                            ) : (
+                                savedFlows.map((flow) => (
+                                    <div
+                                        key={flow.id}
+                                        onClick={() => loadSpecificFlow(flow)}
+                                        className={`p-3 rounded-xl border border-white/5 cursor-pointer transition-all flex items-center gap-3 group relative ${flow.id === flowId ? 'bg-blue-500/20 border-blue-500/30' : 'hover:bg-white/5'}`}
+                                    >
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${flow.id === flowId ? 'bg-blue-500 text-white' : 'bg-white/5 text-gray-500 group-hover:bg-blue-500/20 group-hover:text-blue-400'}`}>
+                                            <FolderOpen size={14} />
+                                        </div>
+
+                                        <div className="min-w-0 flex-1 pr-6">
+                                            {renamingId === flow.id ? (
+                                                <div
+                                                    className="flex items-center gap-1"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <input
+                                                        autoFocus
+                                                        value={tempRenameValue}
+                                                        onChange={(e) => setTempRenameValue(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') submitRename(e, flow.id);
+                                                            if (e.key === 'Escape') cancelRename(e);
+                                                        }}
+                                                        className="bg-[#111b21] border border-blue-500 rounded px-1.5 py-0.5 text-xs text-white outline-none w-full"
+                                                    />
+                                                    <button onClick={(e) => submitRename(e, flow.id)} className="text-[#02C173] hover:bg-[#02C173]/20 p-0.5 rounded"><Check size={12} /></button>
+                                                    <button onClick={cancelRename} className="text-red-400 hover:bg-red-500/20 p-0.5 rounded"><X size={12} /></button>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <span className={`block text-xs font-semibold truncate ${flow.id === flowId ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
+                                                        {flow.name}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-600 block">
+                                                        {flow.status} • {flow.nodes.length} nodes
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {/* Action Buttons (Visible on Hover when not renaming) */}
+                                        {renamingId !== flow.id && (
+                                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={(e) => startRenaming(e, flow)}
+                                                    className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white"
+                                                    title="Rename"
+                                                >
+                                                    <Edit2 size={12} />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => deleteFlow(e, flow.id)}
+                                                    className="p-1.5 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-400"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Mobile Sidebar Overlay */}
@@ -1031,6 +1293,21 @@ export default function AutomationPage() {
                     </AnimatePresence>
                 </div>
             </div>
-        </div>
+
+
+            {/* Confirmation Modal */}
+            <AnimatePresence>
+                {confirmModal.isOpen && (
+                    <ConfirmModal
+                        isOpen={confirmModal.isOpen}
+                        title={confirmModal.title}
+                        message={confirmModal.message}
+                        onConfirm={confirmModal.onConfirm}
+                        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                    />
+                )}
+            </AnimatePresence>
+
+        </div >
     );
 }

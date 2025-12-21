@@ -66,13 +66,20 @@ export default function Footer() {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            {[Github, Twitter, Linkedin, Mail].map((Icon, i) => (
+                            {[
+                                { Icon: Github, href: "https://github.com/harsh5d5" },
+                                { Icon: Twitter, href: "https://x.com/HarshPatel8987" },
+                                { Icon: Linkedin, href: "https://www.linkedin.com/in/harsh-patel-715337363/" },
+                                { Icon: Mail, href: "mailto:harshjpatel2005@gmail.com" }
+                            ].map((social, i) => (
                                 <Link
                                     key={i}
-                                    href="#"
+                                    href={social.href}
+                                    target={social.href.startsWith("mailto") ? undefined : "_blank"}
+                                    rel={social.href.startsWith("mailto") ? undefined : "noopener noreferrer"}
                                     className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-[#02C173] hover:text-black hover:border-[#02C173] transition-all duration-300 shadow-lg"
                                 >
-                                    <Icon className="w-4 h-4" />
+                                    <social.Icon className="w-4 h-4" />
                                 </Link>
                             ))}
                         </div>

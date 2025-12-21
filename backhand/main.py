@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Body, Depends, status, File, UploadFile
+from fastapi import FastAPI, HTTPException, Body, Depends, status, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -28,6 +28,7 @@ from models import (
     Contact, Campaign, Chat, Message, Attachment, WhatsAppConfig, Template,
     AutomationFlow
 )
+from websocket_manager import manager as ws_manager
 
 app = FastAPI()
 
@@ -84,6 +85,15 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+# --- WebSocket Routes ---
+# Import and register WebSocket endpoints
+from websocket_routes import websocket_endpoint, websocket_status
+app.add_api_websocket_route("/ws/{user_id}", websocket_endpoint)
+
+@app.get("/ws/status")
+async def get_ws_status(current_user: User = Depends(get_current_active_user)):
+    return await websocket_status(current_user)
 
 # --- Auth Routes ---
 
@@ -720,6 +730,19 @@ async def check_automations(lead_id: str, user_text: str, owner_email: str):
                     next_node = next((n for n in flow['nodes'] if n['id'] == edge['target']), None)
                     if next_node:
                         print(f"DEBUG: Moving to next node {next_node['id']} via {target_handle}")
+                        # If we moved via 'no' (mismatch) and next is ANOTHER condition, we should really check that condition against the SAME text immediately.
+                        # This allows chaining: Policy? No -> Plans? Yes -> Done.
+                        if next_node['type'] == 'conditionNode':
+                            # Update state effectively "moving" the user to this new node
+                             db.contacts.update_one(
+                                {"id": lead_id, "owner_email": owner_email},
+                                {"$set": {"current_node_id": next_node['id']}}
+                            )
+                             # Recursively check the SAME user text against this new node
+                             # We do this by returning a recursive call to check_automations, but check_automations fetches state from DB.
+                             # Since we just updated DB, calling it again is safe (though slightly inefficient, it's robust).
+                             return await check_automations(lead_id, user_text, owner_email)
+                        
                         return await execute_flow_node(lead_id, next_node, flow, owner_email)
                         
     # 2. Trigger check (Keyword start)
@@ -1161,6 +1184,95 @@ def get_whatsapp_config(current_user: User = Depends(get_current_active_user)):
 def get_chats(current_user: User = Depends(get_current_active_user)):
     chats_cursor = db.chats.find({"owner_email": current_user.email})
     return list(chats_cursor)
+
+@app.get("/api/leads/export")
+def export_leads(current_user: User = Depends(get_current_active_user)):
+    try:
+        print(f"DEBUG: Starting export for user {current_user.email}")
+        # 1. Fetch all contacts for this user
+        contacts = list(db.contacts.find({"owner_email": current_user.email}))
+        print(f"DEBUG: Found {len(contacts)} contacts to export")
+        
+        # 2. Setup CSV Buffer
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # 3. Header
+        writer.writerow(["ID", "Name", "Role", "Company", "Phone", "Email", "Status", "Tags", "Last Contact", "Notes"])
+        
+        # 4. Rows
+        for c in contacts:
+            # Handle potential None for tags
+            tags_list = c.get("tags")
+            if tags_list is None:
+                tags_list = []
+            elif isinstance(tags_list, str):
+                tags_list = [tags_list]
+                
+            writer.writerow([
+                c.get("id", ""),
+                c.get("name", "Unknown"),
+                c.get("role", "Lead"),
+                c.get("company", ""),
+                c.get("phone", ""),
+                c.get("email", ""),
+                c.get("status", "New"),
+                ",".join(tags_list),
+                str(c.get("last_contact", "")), # Ensure string
+                c.get("notes", "")
+            ])
+            
+        output.seek(0)
+        csv_content = output.getvalue()
+        print(f"DEBUG: CSV generated, size {len(csv_content)} bytes")
+        
+        # Use a generator to stream
+        def iterfile():
+            yield csv_content
+
+        response = StreamingResponse(
+            iterfile(),
+            media_type="text/csv"
+        )
+        response.headers["Content-Disposition"] = "attachment; filename=wbizz_leads.csv"
+        return response
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"ERROR in export_leads: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/leads/all")
+def get_all_leads_for_export(current_user: User = Depends(get_current_active_user)):
+    """
+    Returns all contacts/leads as JSON for PDF generation on frontend
+    """
+    try:
+        contacts = list(db.contacts.find({"owner_email": current_user.email}))
+        
+        # Clean up the data for frontend consumption
+        cleaned_contacts = []
+        for contact in contacts:
+            # Remove MongoDB's _id field
+            if "_id" in contact:
+                del contact["_id"]
+            
+            # Ensure tags is always a list
+            if contact.get("tags") is None:
+                contact["tags"] = []
+            elif isinstance(contact.get("tags"), str):
+                contact["tags"] = [contact["tags"]]
+            
+            cleaned_contacts.append(contact)
+        
+        return {
+            "contacts": cleaned_contacts,
+            "total": len(cleaned_contacts),
+            "generated_at": datetime.now().isoformat()
+        }
+    except Exception as e:
+        print(f"ERROR in get_all_leads_for_export: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/chats", response_model=Chat)
 def create_chat(chat: Chat, current_user: User = Depends(get_current_active_user)):

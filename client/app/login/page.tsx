@@ -281,10 +281,7 @@ export default function LoginPage() {
                             style={{ clipPath: 'polygon(10% 0, 100% 0, 100% 100%, 0% 100%)' } as any}
                         >
                             <h2 className="text-3xl font-bold mb-8 text-white">Sign In</h2>
-                            <div className="flex gap-4 mb-6">
-                                <div className="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:border-[#02C173] hover:text-[#02C173] cursor-pointer transition-colors bg-[#0b141a]"><Mail size={18} /></div>
-                                <div className="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:border-[#02C173] hover:text-[#02C173] cursor-pointer transition-colors bg-[#0b141a]"><Lock size={18} /></div>
-                            </div>
+
 
                             <form onSubmit={handleLogin} className="space-y-4">
                                 <div className="relative group">
@@ -320,9 +317,7 @@ export default function LoginPage() {
 
                                 {error && <p className="text-red-500 text-xs text-center font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20">{error}</p>}
 
-                                <div className="text-right">
-                                    <a href="#" className="text-xs text-gray-400 hover:text-[#02C173] transition-colors">Forgot your password?</a>
-                                </div>
+
 
                                 <motion.button
                                     type="submit"

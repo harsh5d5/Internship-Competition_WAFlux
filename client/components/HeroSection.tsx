@@ -97,8 +97,7 @@ export default function HeroSection() {
                         transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
                         className="max-w-2xl mx-auto text-lg md:text-xl text-gray-600 dark:text-gray-400 font-medium leading-relaxed"
                     >
-                        The ultimate high-performance dashboard for WhatsApp Business.
-                        Broadcast campaigns, automate interactions, and track every conversion in real-time.
+                        The ultimate high-performance dashboard for WhatsApp Business. Broadcast campaigns, automate interactions, and track every conversion in real-time.
                     </motion.p>
 
                     {/* 2. Redesigned CTAs (Centered) */}
