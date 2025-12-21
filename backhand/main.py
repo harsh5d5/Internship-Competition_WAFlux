@@ -1351,8 +1351,14 @@ import google.generativeai as genai
 from openai import OpenAI
 
 # OpenAI Configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
-client = OpenAI(api_key=OPENAI_API_KEY)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client = None
+if OPENAI_API_KEY and not OPENAI_API_KEY.startswith("sk-svcacct"):
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=OPENAI_API_KEY)
+    except Exception as e:
+        print(f"⚠️ OpenAI initialization failed: {e}")
 
 # Google AI Configuration (Legacy/Fallback)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyBdG9ERty6YWZ_e3VMoGHFSn6woIeGGYOk")
