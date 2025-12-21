@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Body, Depends, status, File, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Body, Depends, status, File, UploadFile, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -205,7 +205,7 @@ async def delete_account(current_user: User = Depends(get_current_active_user)):
     return {"detail": "Account and all associated data deleted successfully"}
 
 @app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_active_user)):
+async def upload_file(request: Request, file: UploadFile = File(...), current_user: User = Depends(get_current_active_user)):
     file_location = f"uploads/{file.filename}"
     
     # Check for duplicate names, maybe append UUID if strictly needed, 
@@ -217,8 +217,9 @@ async def upload_file(file: UploadFile = File(...), current_user: User = Depends
     with open(file_location, "wb+") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
-    # Return the URL relative to the server
-    return {"url": f"http://localhost:8000/uploads/{unique_filename}", "name": file.filename, "type": file.content_type}
+    # Return the dynamic URL
+    base_url = str(request.base_url).rstrip("/")
+    return {"url": f"{base_url}/uploads/{unique_filename}", "name": file.filename, "type": file.content_type}
 
 # --- Application Routes ---
 
