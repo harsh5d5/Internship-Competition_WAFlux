@@ -216,17 +216,32 @@ export default function AutomationWorkflow() {
                         {/* 2. MIDDLE-WARE (BRAIN) */}
                         <motion.div
                             variants={cardVariants}
-                            className={`w-32 h-32 lg:w-40 lg:h-40 rounded-[2.5rem] flex flex-col items-center justify-center transition-all bg-[#0c1116] border ${activeStep === 1 ? 'border-[#02C173] ring-4 ring-[#02C173]/10' : 'border-white/5'} shadow-2xl relative group my-4 lg:my-0`}
+                            className={`w-32 h-32 lg:w-40 lg:h-40 rounded-[2.5rem] flex flex-col items-center justify-center transition-all bg-[#0c1116] border ${activeStep === 1 ? 'border-[#02C173] text-[#02C173]' : 'border-white/5 text-white/20'} shadow-2xl relative group my-4 lg:my-0`}
+                            animate={activeStep === 1 ? {
+                                boxShadow: "0 0 40px rgba(2, 193, 115, 0.3)",
+                                scale: 1.05
+                            } : {
+                                boxShadow: "0 0 0px rgba(0, 0, 0, 0)",
+                                scale: 1
+                            }}
+                            transition={{ duration: 0.5 }}
                         >
                             <div className="relative mb-2 lg:mb-3">
+                                {/* Outer Ring (Clockwise) */}
                                 <motion.div
-                                    animate={activeStep === 1 ? { rotate: 360 } : {}}
-                                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                                    className="absolute inset-0 -m-4 lg:-m-6 border-2 border-dashed border-[#02C173]/20 rounded-full"
+                                    animate={activeStep === 1 ? { rotate: 360, opacity: 1 } : { rotate: 0, opacity: 0.3 }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                    className="absolute inset-0 -m-5 lg:-m-8 border-[2px] border-dashed border-[#02C173] rounded-full"
                                 />
-                                <Cpu className={`w-8 h-8 lg:w-10 lg:h-10 transition-colors ${activeStep === 1 ? 'text-[#02C173]' : 'text-white/20'}`} />
+                                {/* Inner Ring (Counter-Clockwise) */}
+                                <motion.div
+                                    animate={activeStep === 1 ? { rotate: -360, opacity: 1 } : { rotate: 0, opacity: 0.3 }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                    className="absolute inset-0 -m-3 lg:-m-5 border-[2px] border-dotted border-[#02C173]/50 rounded-full"
+                                />
+                                <Cpu className={`w-8 h-8 lg:w-10 lg:h-10 transition-colors duration-300 ${activeStep === 1 ? 'text-[#02C173] drop-shadow-[0_0_10px_rgba(2,193,115,0.8)]' : 'text-white/20'}`} />
                             </div>
-                            <span className={`text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${activeStep === 1 ? 'text-[#02C173]' : 'text-white/20'}`}>
+                            <span className={`text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-300 ${activeStep === 1 ? 'text-[#02C173]' : 'text-white/20'}`}>
                                 Neural Bridge
                             </span>
                         </motion.div>
