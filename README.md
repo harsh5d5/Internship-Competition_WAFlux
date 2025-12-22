@@ -13,10 +13,19 @@ WBIZZ is a high-performance, full-stack WhatsApp Business Management platform de
 - **Interactive Data Visualization**: Beautifully rendered charts for message history, audience engagement, and campaign performance.
 - **Activity Feed**: Stay updated with the latest interactions across your business.
 
-### 👥 CRM & Contact Management
-- **Centralized Database**: Manage your business contacts with search, filter, and sorting capabilities.
-- **Segmentation**: Organize contacts with tags and custom fields for targeted messaging.
-- **Bulk Operations**: Seamlessly import/export contacts and perform batch actions.
+### 🎯 CRM Board (Customer Relationship Management)
+**Organize and track leads clearly, instead of relying only on WhatsApp chat messages.**
+
+*   **Visual Sales Pipeline**: Think of this as a visual board where you can track the journey of every customer.
+*   **Real-World Example (Real Estate)**:
+    *   **Add Lead**: When a new customer messages, manually add them as a card in the **"New Leads"** column.
+    *   **Interested**: If they show interest, simply drag their card to **"Interested"**.
+    *   **Negotiating**: Move them to **"Negotiating"** when discussing price.
+    *   **Closed**: Drag them to **"Closed"** when the deal is done.
+*   **Full Accuracy & Flexibility**: Manual control ensures your business data is exactly how you want it.
+*   **User Efficiency**: Without this board, you would have to read hundreds of chats to remember who is buying. With the CRM board, everything is visible in **one screen and one second**.
+*   **All-in-One Management**: Edit leads, add notes, or remove junk contacts directly from the board without navigating away.
+*   **Real-Time Integration**: As soon as a message arrives, you can instantly turn that chat into a lead, ensuring no opportunity is ever missed.
 
 ### 💬 Professional Chat Interface
 - **Real-time Messaging**: Low-latency chat experience powered by WebSockets.
@@ -29,10 +38,18 @@ WBIZZ is a high-performance, full-stack WhatsApp Business Management platform de
 - **Deep Analytics**: Track delivery status per contact and overall campaign success rates.
 - **Template Integration**: Use pre-defined templates for professional outreach.
 
-### 🤖 Automation & AI
-- **Automation Flow Builder**: Design complex logical branches for automated responses.
-- **AI Integration**: Enhance customer interactions with AI-powered assistants (Gemini/OpenAI).
-- **Global AI Persona**: Define your agent's personality and behavior.
+### 🤖 Automation (Digital Assistant)
+**Automation works like a digital assistant that follows a fixed conversation flow.**
+
+*   **Visual Flow Builder (No Coding)**: Everything is controlled using a visual flow builder. Any business owner can change the bot in **2 minutes** simply by editing the flow.
+*   **Real-World Example (Insurance Company)**:
+    *   **Trigger**: When a customer sends **“START”**, the automation begins.
+    *   **Welcome**: The system sends a welcome message.
+    *   **Inquiry**: It asks for the **policy number**.
+    *   **Logic**: Based on the reply, it sends the next message.
+*   **24/7 Operations**: Even when the business is closed, the bot continues answering questions and collecting details.
+*   **Test Simulator**: WBIZZ provides a **Test Simulator** so you can ensure the automation works perfectly before going live.
+*   **Error-Free**: Because the bot follows a fixed flow, it is error-free. It **never forgets** to ask important questions — whereas humans sometimes do.
 
 ### 📝 Template & Asset Management
 - **Template Gallery**: Browse, preview, and manage your WhatsApp message templates.
@@ -92,21 +109,47 @@ docker-compose up --build
 ```
 The application will be available at `http://localhost:3000`.
 
-### Local Development
+### 🔧 Local Development Guide
 
-1. **Backend Setup**:
-   ```bash
-   cd backhand
-   pip install -r requirements.txt
-   uvicorn main:app --reload
-   ```
+Follow these steps to run the application locally without Docker.
 
-2. **Frontend Setup**:
-   ```bash
-   cd client
-   npm install
-   npm run dev
-   ```
+#### 1. Backend Setup (Terminal 1)
+The backend handles the API, database connections, and business logic.
+
+```bash
+# Navigate to the backend directory
+cd backhand
+
+# Create and activate a virtual environment (Recommended)
+# Windows:
+python -m venv venv
+.\venv\Scripts\activate
+# Mac/Linux:
+# python3 -m venv venv
+# source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the server
+uvicorn main:app --reload
+```
+*The backend will start at `http://127.0.0.1:8000`*
+
+#### 2. Frontend Setup (Terminal 2)
+The frontend is the user interface built with Next.js.
+
+```bash
+# Open a new terminal and navigate to the client directory
+cd client
+
+# Install dependencies
+npm install  --force
+
+# Start the development server
+npm run dev
+```
+*The frontend will start at `http://localhost:3000`*
 
 ---
 
