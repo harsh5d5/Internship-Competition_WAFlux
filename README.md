@@ -1,4 +1,7 @@
-# 🚀 WBIZZ - Advanced WhatsApp Business Dashboard
+# 🚀 WBIZZ 
+<p align="center">
+  <img src="https://img.sanishtech.com/u/865f8227c53cbdc5e5ac02e60efe712d.png" alt="WBIZZ Dashboard" width="800"/>
+</p>
 
 **Master Your Business, One Message at a Time.**
 
@@ -15,6 +18,12 @@ WBIZZ is a high-performance, full-stack WhatsApp Business Management platform de
 
 ### 🎯 CRM Board (Customer Relationship Management)
 **Organize and track leads clearly, instead of relying only on WhatsApp chat messages.**
+<p align="center">
+  <img src="https://img.sanishtech.com/u/6dd73517c997f89b94d137714bcd8621.png"
+       alt="WBIZZ - Advanced WhatsApp Business Dashboard"
+       width="800"/>
+</p>
+
 
 *   **Visual Sales Pipeline**: Think of this as a visual board where you can track the journey of every customer.
 *   **Real-World Example (Real Estate)**:
