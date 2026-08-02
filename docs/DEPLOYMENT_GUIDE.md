@@ -58,7 +58,7 @@ If you don't want to manage a server, use these specialized platforms:
 
 2. **Backend (FastAPI):** Deploy to **Railway.app** or **Render.com**.
    - These platforms support `Dockerfiles` natively.
-   - Point them to your `/backhand` directory.
+   - Point them to your `/backend` directory.
    - Add your MongoDB URI to their "Variables" tab.
 
 3. **Database:** Keep using **MongoDB Atlas**.
@@ -71,7 +71,7 @@ Before you go live, ensure these are handled:
 
 - [ ] **MongoDB Whitelist**: Ensure your production server IP is whitelisted in MongoDB Atlas.
 - [ ] **JWT Secret**: Change `SECRET_KEY` in `.env.production` to a long, random string.
-- [ ] **Cors Policy**: Update `allow_origins` in `backhand/main.py` to your actual domain.
+- [ ] **Cors Policy**: Update `allow_origins` in `backend/main.py` to your actual domain.
 - [ ] **API URLs**: Ensure the Frontend `NEXT_PUBLIC_API_URL` points to your production backend domain.
 - [ ] **Storage**: If using local uploads, ensure the `uploads/` volume in `docker-compose.yml` is correctly mapped for persistence.
 
