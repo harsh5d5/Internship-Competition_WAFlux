@@ -64,7 +64,7 @@ Built with Next.js 14, FastAPI, MongoDB Atlas, and WebSockets, WBIZZ provides re
 
 ```text
 Internship-Competition_WAFlux/
-├── backhand/                      # FastAPI Backend Application
+├── backend/                       # FastAPI Backend Application
 │   ├── main.py                   # FastAPI endpoints, auth & app initialization
 │   ├── database.py               # MongoDB connection setup
 │   ├── models.py                 # Pydantic schemas for data validation
@@ -116,7 +116,7 @@ Access the services:
 #### 1. Backend Setup (FastAPI)
 
 ```bash
-cd backhand
+cd backend
 
 # Create and activate virtual environment
 python -m venv venv
