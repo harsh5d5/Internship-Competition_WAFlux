@@ -4,7 +4,7 @@ services:
   # Backend Service (FastAPI)
   backend:
     build:
-      context: ./backhand
+      context: ./backend
       dockerfile: Dockerfile
     container_name: wbizz-backend
     restart: unless-stopped
@@ -18,8 +18,8 @@ services:
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
     volumes:
-      - ./backhand/uploads:/app/uploads
-      - ./backhand/wbizz_brain.json:/app/wbizz_brain.json
+      - ./backend/uploads:/app/uploads
+      - ./backend/wbizz_brain.json:/app/wbizz_brain.json
     networks:
       - wbizz-network
     healthcheck:
