@@ -12,13 +12,13 @@ To deploy WBIZZ, we will use a **Split-Deployment Architecture**. This is becaus
 
 ## 1️⃣ Deploying the Backend (Railway/Render)
 
-Since we have a `Dockerfile` in `/backhand`, these platforms will automatically detect it.
+Since we have a `Dockerfile` in `/backend`, these platforms will automatically detect it.
 
 1.  **Sign up** for [Railway.app](https://railway.app).
 2.  Click **New Project** → **Deploy from GitHub repo**.
 3.  Select your WBIZZ repo.
 4.  **Crucial Settings:**
-    *   **Root Directory:** Set to `backhand`.
+    *   **Root Directory:** Set to `backend`.
     *   **Variables:** Add all variables from `.env.production.example` (MongoDB URI, SECRET_KEY, etc.).
 5.  Railway will build the Docker container and give you a URL (e.g., `wbizz-backend.up.railway.app`).
 
