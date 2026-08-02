@@ -5,17 +5,17 @@
 ### ✅ What We've Built
 
 **Backend Infrastructure:**
-1. **WebSocket Connection Manager** (`backhand/websocket_manager.py`)
+1. **WebSocket Connection Manager** (`backend/websocket_manager.py`)
    - Multi-connection support per user
    - Automatic cleanup and error handling
    - Message broadcasting capabilities
 
-2. **WebSocket Endpoints** (`backhand/websocket_routes.py`)
+2. **WebSocket Endpoints** (`backend/websocket_routes.py`)
    - `/ws/{user_id}` - Real-time connection endpoint
    - `/ws/status` - Connection monitoring
    - Ping/pong heartbeat system
 
-3. **Integration** (`backhand/main.py`)
+3. **Integration** (`backend/main.py`)
    - WebSocket routes registered
    - Ready for real-time chat
 
@@ -164,7 +164,7 @@ export default function WebSocketTest() {
 
 **Monitor Connection Count:**
 ```python
-# Add to backhand/main.py for monitoring
+# Add to backend/main.py for monitoring
 @app.get("/admin/ws-stats")
 async def websocket_stats():
     return {
@@ -372,7 +372,7 @@ console.log(`📊 Message delivered in ${Date.now() - sentTime}ms`);
 
 ```bash
 # Terminal 1: Backend
-cd backhand
+cd backend
 uvicorn main:app --reload
 
 # Terminal 2: Frontend  
